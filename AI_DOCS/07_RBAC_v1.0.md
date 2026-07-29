@@ -1,3 +1,0 @@
-# RBAC
-
-Roles and permissions.
