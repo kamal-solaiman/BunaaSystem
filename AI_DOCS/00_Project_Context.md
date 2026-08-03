@@ -7,7 +7,7 @@
 >
 > **Status: FINAL** — This document is frozen. No new features will be added. Future scope must be documented in separate files.
 >
-> **Scope:** Project vision, architecture, business model, business rules, terminology, and high-level concepts. Detailed screen behavior and functional specifications belong to `02_Software_Requirements_v1.0.md`.
+> **Scope:** Project vision, architecture, business model, business rules, terminology, and high-level concepts. Detailed screen behavior and functional specifications belong to `02_Software_Requirements.md`.
 
 ---
 
@@ -153,7 +153,7 @@ The specification describes **two separate financial flows that must never be co
 
 ## 6. User Roles (CONFIRMED)
 
-Five roles exist. Detailed permission matrices are owned by `07_RBAC_v1.0.md`; this section captures confirmed role definitions and boundaries only.
+Five roles exist. Detailed permission matrices are owned by `08_RBAC.md`; this section captures confirmed role definitions and boundaries only.
 
 ### 6.1 Super Admin
 
@@ -196,7 +196,7 @@ Five roles exist. Detailed permission matrices are owned by `07_RBAC_v1.0.md`; t
 
 ## 7. Product Surfaces — High-Level (CONFIRMED)
 
-Module inventories only. Detailed screen behavior, workflows, and edge cases are specified in `02_Software_Requirements_v1.0.md` (to be authored) — they are deliberately **not** duplicated here.
+Module inventories only. Detailed screen behavior, workflows, and edge cases are specified in `02_Software_Requirements.md` (to be authored) — they are deliberately **not** duplicated here.
 
 ### 7.1 Teacher Panel
 
@@ -308,6 +308,14 @@ Numbered and binding. Referenced as `BR-xxx` from every document and from code.
 
 ---
 
+## 9.9 Confirmed Workflow Clarifications
+
+| ID | Rule | Status |
+|----|------|--------|
+| **BR-023** | **Parent account workflow:** a Parent creates an account by Parent registration. The Parent submits a Parent–Student link request; the Teacher responsible for the Student’s active Enrollment approves or rejects it. Approval creates the read-only link only when the Student has no other linked Parent. The Parent may request unlinking; the same responsible Teacher approves the unlink. Rejection, approval, and unlinking preserve history and are recorded in the Audit Log. | CONFIRMED |
+| **BR-024** | **Flow B — Per Lesson Billing:** a billable lesson is a Lesson completed for a Group while the Student has an active Enrollment in that Group. A Per Lesson fee obligation is recorded when that lesson is completed, at that Group’s recorded Price. A lesson is not billable merely because it is drafted, scheduled, published, viewed, attended, or assigned; each Student may receive at most one obligation for the same completed lesson. The Platform records status only; payment remains outside the Platform. | CONFIRMED |
+| **BR-025** | **Same-Teacher Group transfer billing:** for Flow A, Enrollment duration is accumulated across all Groups belonging to the same Teacher during one Billing Cycle; a transfer does not reset the more-than-15-calendar-days test. Flow B obligations remain tied to the Group and lesson that created them; history is preserved. | CONFIRMED |
+
 ## 10. Audit Log Policy (CONFIRMED)
 
 The Audit Log is a first-class, platform-wide subsystem. The following is explicit — not aspirational.
@@ -357,19 +365,19 @@ Archive replaces delete everywhere (BR-005). Archived records have the following
 Additional properties:
 
 6. **No hard delete exists anywhere in the system** — not for Teachers, not for Teacher Staff, not for the Super Admin.
-7. Archival cascades are defined per entity in `06_Database_Design_v1.0.md` (to be authored); archiving a container (e.g., a Group) never archives its historical records.
+7. Archival cascades are defined per entity in `06_Database_Design.md` (to be authored); archiving a container (e.g., a Group) never archives its historical records.
 
 ---
 
 ## 12. Architecture Principles (Summary)
 
-Full definition in `03_System_Architecture_v1.0.md`. The principles that make the confirmed rules *structural*:
+Full definition in `03_System_Architecture.md`. The principles that make the confirmed rules *structural*:
 
 1. **Multi-Tenant Architecture (CONFIRMED).** Teacher data is completely isolated using a Multi-Tenant architecture: each Teacher Workspace is a tenant; every workspace-owned row carries the Teacher's identity; queries are workspace-scoped; no cross-tenant foreign keys; per-tenant constraints enforce rules such as BR-002.
 2. **One identity, stacked roles (PROPOSED mechanics).** One global user account per person; Teacher, Teacher Staff, Parent-link, and Student-enrollment roles attach to that account contextually.
 3. **Immutable Subscription snapshots (PROPOSED mechanics for BR-008).** Monthly usage is materialized into invoice snapshots that never mutate; corrections are adjustment records.
 4. **Transfer-safe enrollment periods (PROPOSED mechanics for BR-007).** Enrollments are time-bounded periods; historical records reference the period and structure as of recording time.
-5. **API-first REST (CONFIRMED).** REST API architecture with Laravel Sanctum authentication; versioning and envelope conventions are detailed in `08_API_Design_v1.0.md`.
+5. **API-first REST (CONFIRMED).** REST API architecture with Laravel Sanctum authentication; versioning and envelope conventions are detailed in `10_API_Design.md`.
 6. **Security baseline (PROPOSED).** Server-side authorization on every request; signed short-lived QR tokens; rate limiting on login/scan/submit; signed media URLs; secrets server-side only.
 7. **Private media (PROPOSED).** Lesson videos in private storage with signed playback; per-Teacher quota; archived lessons stop playing but are retained (Archive Policy).
 
@@ -386,13 +394,13 @@ Full definition in `03_System_Architecture_v1.0.md`. The principles that make th
 | Authentication | **Laravel Sanctum** |
 | V1 platform scope | **Web Application only** (BR-017) |
 
-Environment, tooling, and infrastructure specifics belong to `04_Project_Structure_v1.0.md` and `12_Deployment_Plan_v1.0.md` (to be authored).
+Environment, tooling, and infrastructure specifics belong to `04_Project_Structure.md` and `26_Deployment_Plan.md` (to be authored).
 
 ---
 
-## 14. Localization & Regional Considerations — PENDING (Q-015)
+## 14. Localization & Regional Considerations — Language CONFIRMED; Timezone/Currency PENDING (Q-015)
 
-- Proposed defaults: **Arabic-first with full RTL** + English; i18n architecture from day one; per-Teacher timezone; platform-level display currency for Flow B.
+- **CONFIRMED:** Arabic is the default language, English is fully supported, and the application automatically supports RTL/LTR. Future languages are supported. Per-Teacher timezone and platform-level display currency remain PENDING.
 - Target market/country — awaiting Product Owner confirmation.
 
 ---
@@ -410,7 +418,7 @@ Resolved questions are archived in §15.2 — never deleted. Only genuinely unre
 | Q-011 | Teacher Staff permission granularity | Fixed capability-flag catalog per module; saveable named presets |
 | Q-012 | Super Admin content visibility | Aggregates/finances/metadata only; no browsing of Teacher-private content |
 | Q-013 | Flat price or volume tiers | Flat price per Student at launch; tier-ready engine |
-| Q-015 | Languages/timezone/currency | Arabic-first RTL + English; per-Teacher timezone; platform-level currency |
+| Q-015 | Timezone/currency | Language is confirmed: Arabic (default), English (fully supported), automatic RTL/LTR, and future languages supported. Per-Teacher timezone and platform-level currency remain PENDING. |
 
 ### 15.2 Resolved (archive)
 
@@ -459,7 +467,7 @@ Authoritative log lives in the project decisions documentation. Current entries:
 3. **No silent assumptions.** Ambiguities are PENDING-tagged (each with a proposed default to keep momentum).
 4. **Consistency is mandatory.** Every future document and decision must remain consistent with this document; contradictions are defects.
 5. **Project context persists** across sessions; prior decisions remain binding unless formally changed.
-6. **The project is built gradually** — a phased development plan (`10_Development_Roadmap_v1.0.md`, to be authored) governs execution order.
+6. **The project is built gradually** — a phased development plan (`27_Development_Roadmap.md`, to be authored) governs execution order.
 7. **Never invent unnecessary features** — scope enters the documents only from the Product Owner or as flagged PROPOSED items awaiting approval.
 8. **Technical leadership accountability:** architecture, documentation, database, backend structure, frontend structure, APIs, and development planning are owned by the Architect; product decisions by the Product Owner.
 
@@ -472,18 +480,18 @@ The authoritative documentation structure (established 2026-07-28). `00` is inte
 | # | File | Content Scope | State |
 |---|------|---------------|-------|
 | 00 | `00_Project_Context.md` | **This document** — single source of truth | **Revision 2.0 FINAL** |
-| 01 | `01_Project_Vision_v1.0.md` | Vision, goals, success metrics | Empty — awaiting instruction |
-| 02 | `02_Software_Requirements_v1.0.md` | Functional & non-functional requirements (owns all detailed screen behavior) | Empty — awaiting instruction |
-| 03 | `03_System_Architecture_v1.0.md` | Multi-Tenant architecture, security, media, billing design | Empty — awaiting instruction |
-| 04 | `04_Project_Structure_v1.0.md` | Repository/module structure | Empty — awaiting instruction |
-| 05 | `05_User_Flows_v1.0.md` | Flows per role | Empty — awaiting instruction |
-| 06 | `06_Database_Design_v1.0.md` | ERD & schema design | Empty — awaiting instruction |
-| 07 | `07_RBAC_v1.0.md` | Roles & permissions matrices | Empty — awaiting instruction |
-| 08 | `08_API_Design_v1.0.md` | REST API specification | Empty — awaiting instruction |
-| 09 | `09_UI_UX_Guidelines_v1.0.md` | Design system & UX rules | Empty — awaiting instruction |
-| 10 | `10_Development_Roadmap_v1.0.md` | Phases & milestones | Empty — awaiting instruction |
-| 11 | `11_Coding_Standards_v1.0.md` | Code conventions | Empty — awaiting instruction |
-| 12 | `12_Deployment_Plan_v1.0.md` | Environments, CI/CD, rollout | Empty — awaiting instruction |
+| 01 | `01_Project_Vision.md` | Vision, goals, success metrics | Empty — awaiting instruction |
+| 02 | `02_Software_Requirements.md` | Functional & non-functional requirements (owns all detailed screen behavior) | Empty — awaiting instruction |
+| 03 | `03_System_Architecture.md` | Multi-Tenant architecture, security, media, billing design | Empty — awaiting instruction |
+| 04 | `04_Project_Structure.md` | Repository/module structure | Empty — awaiting instruction |
+| 05 | `05_User_Flows.md` | Flows per role | Empty — awaiting instruction |
+| 06 | `06_Database_Design.md` | ERD & schema design | Empty — awaiting instruction |
+| 07 | `08_RBAC.md` | Roles & permissions matrices | Empty — awaiting instruction |
+| 08 | `10_API_Design.md` | REST API specification | Empty — awaiting instruction |
+| 09 | `13_UI_UX_Guidelines.md` | Design system & UX rules | Empty — awaiting instruction |
+| 10 | `27_Development_Roadmap.md` | Phases & milestones | Empty — awaiting instruction |
+| 11 | `28_Coding_Standards.md` | Code conventions | Empty — awaiting instruction |
+| 12 | `26_Deployment_Plan.md` | Environments, CI/CD, rollout | Empty — awaiting instruction |
 
 **Note:** Earlier provisional drafts in this folder should be removed to prevent conflicting sources of truth. This document is now the **official and final** Project Context.
 

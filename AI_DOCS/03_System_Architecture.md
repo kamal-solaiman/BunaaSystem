@@ -117,21 +117,42 @@ The Platform is not an online course marketplace. There is no course discovery, 
 
 # 4. High-Level System Overview
 
-The Unified Education Platform is a Web Application built with a React frontend, Laravel backend, MySQL database, REST communication style, and Laravel Sanctum authentication.
+The Unified Education Platform is a Web Application built on the official Version 1 architecture baseline: React 19 with TypeScript, Vite, and Tailwind CSS on the frontend; Laravel 12 with PHP 8.3 on the backend; MySQL 8 for persistence; Laravel Sanctum for authentication; Laravel Gates & Policies with Custom RBAC for authorization; and cPanel Shared Hosting as the primary deployment target.
+
+## 4.1 Official Version 1 Technology Baseline
+
+| Concern | Official Version 1 Baseline |
+|---|---|
+| Primary Deployment Target | cPanel Shared Hosting |
+| Future Deployment Target | VPS / Cloud |
+| Backend | Laravel 12, PHP 8.3 |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS |
+| Database | MySQL 8 |
+| Authentication | Laravel Sanctum |
+| Authorization | Laravel Gates & Policies, Custom RBAC based on project requirements |
+| Cache | File Cache |
+| Queue | Database Queue |
+| Session Driver | Database |
+| Storage | Laravel Public Storage |
+| Scheduler | Laravel Scheduler with Cron Jobs |
+| Mail | SMTP |
+| Web Server | Apache or LiteSpeed |
+
+Version 1 must not require Docker, Redis, Kubernetes, S3 Storage, WebSockets, or Microservices.
 
 At a high level, the Platform consists of the following major components:
 
 1. **React Web Frontend**
-   Provides browser-based access for Super Admin, Teacher, Teacher Staff, Student, and Parent role contexts.
+   Provides browser-based access for Super Admin, Teacher, Teacher Staff, Student, and Parent role contexts using React 19, TypeScript, Vite, and Tailwind CSS.
 
 2. **Laravel Backend**
-   Owns business logic, authentication integration, authorization, tenant scoping, validation, Audit Log creation, reporting orchestration, billing-status logic, file access control, QR Attendance handling, and Exam Engine operations.
+   Owns business logic, authentication integration, authorization, tenant scoping, validation, Audit Log creation, reporting orchestration, billing-status logic, file access control, QR Attendance handling, and Exam Engine operations using Laravel 12 on PHP 8.3.
 
-3. **MySQL Database**
-   Persists Platform data, Teacher Workspace data, Student identity, Parent links, Enrollment history, payment status, Archive state, and Audit Log entries.
+3. **MySQL 8 Database**
+   Persists Platform data, Teacher Workspace data, Student identity, Parent links, Enrollment history, payment status, Archive state, session data, queue jobs, and Audit Log entries.
 
-4. **Private File Storage**
-   Stores Teacher-owned private files such as Lesson videos and supported Homework files, while enforcing access boundaries.
+4. **Laravel Public Storage**
+   Stores Teacher-owned files such as Lesson videos and supported Homework files using Laravel Public Storage while requiring application-level ownership checks and access control so Teacher-owned content remains private to the correct Teacher Workspace and authorized users.
 
 5. **Audit Log Subsystem**
    Records important actions and supports permanent traceability.
@@ -216,7 +237,7 @@ The Storage Layer manages private file and media storage. It is responsible for:
 
 # 6. Frontend Architecture
 
-The frontend is a React Web Application. It provides all Version 1 user interaction through the browser.
+The frontend is a React 19 Web Application built with TypeScript, Vite, and Tailwind CSS. It provides all Version 1 user interaction through the browser.
 
 ## 6.1 Responsibilities
 
@@ -263,7 +284,7 @@ The frontend must not introduce:
 
 # 7. Backend Architecture
 
-The backend is built with Laravel and owns the Platform's server-side architecture.
+The backend is built with Laravel 12 on PHP 8.3 and owns the Platform's server-side architecture.
 
 ## 7.1 Responsibilities
 
@@ -282,6 +303,11 @@ The backend is responsible for:
 - QR Attendance handling.
 - Exam Engine coordination.
 - File storage access control.
+- File Cache for cache responsibilities.
+- Database Queue for queued work.
+- Database session driver for session persistence.
+- Laravel Scheduler with Cron Jobs for scheduled tasks.
+- SMTP as the mail transport baseline, without adding Version 1 notification features.
 
 ## 7.2 Layer Communication
 
@@ -325,7 +351,7 @@ These are architectural domains only and do not define database tables or endpoi
 
 # 8. Database Architecture
 
-The database layer uses MySQL as confirmed in the Project Context.
+The database layer uses MySQL 8 as the official Version 1 database.
 
 ## 8.1 Responsibilities
 
@@ -388,7 +414,7 @@ The architecture must prevent these flows from being conflated in reporting, bil
 
 # 9. Authentication Architecture
 
-Authentication is based on Laravel Sanctum, as confirmed in the Project Context.
+Authentication is based on Laravel Sanctum, as confirmed in the Project Context and the official Version 1 stack.
 
 ## 9.1 Responsibilities
 
@@ -428,7 +454,7 @@ The authentication architecture must not introduce:
 
 # 10. Authorization (RBAC) Architecture
 
-Authorization controls what an authenticated user can access or modify. Version 1 has five confirmed roles: Super Admin, Teacher, Teacher Staff, Student, and Parent.
+Authorization controls what an authenticated user can access or modify. Version 1 has five confirmed roles: Super Admin, Teacher, Teacher Staff, Student, and Parent. The official authorization baseline is Laravel Gates & Policies with Custom RBAC based on project requirements.
 
 ## 10.1 Responsibilities
 
@@ -546,11 +572,11 @@ Reports must preserve tenant isolation. Teacher reports are limited to the Teach
 
 # 12. File Storage Architecture
 
-File storage is responsible for private storage and controlled access to files used by confirmed Version 1 features.
+File storage is responsible for controlled access to files used by confirmed Version 1 features. The official Version 1 storage baseline is Laravel Public Storage, selected for compatibility with cPanel Shared Hosting. Because Lessons and Teacher-owned files are private by business rule, application-level authorization and ownership checks must control access to stored files.
 
 ## 12.1 Storage Responsibilities
 
-The storage architecture supports:
+The storage architecture supports Laravel Public Storage on the primary cPanel Shared Hosting deployment target. It supports:
 
 - Lesson videos uploaded by Teachers for their own Students.
 - Homework files in supported formats: Text, Image, and PDF.
@@ -568,7 +594,7 @@ The storage architecture must prevent:
 - Public course browsing.
 - Exposure of one Teacher's Lessons to another Teacher's Students.
 
-Lesson video hosting and protection details remain PENDING and must not be silently hardened beyond the Project Context.
+Lesson video hosting and protection details remain PENDING and must not be silently hardened beyond the Project Context. S3 Storage is not required for Version 1.
 
 ## 12.3 Homework File Storage
 
@@ -924,17 +950,24 @@ File storage scalability must preserve private Teacher ownership and access cont
 
 # 20. Deployment Overview
 
-Version 1 is deployed as a Web Application consisting of a React frontend, Laravel backend, MySQL database, and private file storage.
+Version 1 is deployed primarily to cPanel Shared Hosting as a Web Application consisting of a React 19 frontend, Laravel 12 backend running on PHP 8.3, MySQL 8 database, and Laravel Public Storage. VPS / Cloud is the future deployment target and must not be required for Version 1.
 
 ## 20.1 Deployment Responsibilities
 
 The deployment architecture must support:
 
-- Browser access to the React Web Application.
-- Backend application hosting for Laravel.
-- MySQL persistence.
-- Private file storage.
+- Browser access to the React 19 Web Application.
+- Backend application hosting for Laravel 12 on PHP 8.3.
+- MySQL 8 persistence.
+- Laravel Public Storage with application-level access control.
 - Secure authentication through Laravel Sanctum.
+- Authorization through Laravel Gates & Policies and Custom RBAC.
+- File Cache.
+- Database Queue.
+- Database session driver.
+- Laravel Scheduler executed through Cron Jobs.
+- SMTP as the mail transport baseline without introducing Version 1 notification features.
+- Apache or LiteSpeed as the Web Server baseline for cPanel Shared Hosting.
 - Audit Log retention.
 - Archive and historical data preservation.
 
@@ -942,11 +975,13 @@ The deployment architecture must support:
 
 At deployment level:
 
-1. Users access the React Web Application through a browser.
-2. The React frontend communicates with the Laravel backend using REST-style HTTP communication.
-3. The Laravel backend communicates with MySQL for persistence.
-4. The Laravel backend controls access to private file storage.
+1. Users access the React 19 Web Application through a browser.
+2. The React frontend communicates with the Laravel 12 backend using REST-style HTTP communication.
+3. The Laravel backend communicates with MySQL 8 for persistence, sessions, and database-backed queues.
+4. The Laravel backend controls access to Laravel Public Storage through application-level authorization.
 5. The Laravel backend records Audit Log entries for important actions.
+6. Laravel Scheduler runs through Cron Jobs on the hosting environment.
+7. SMTP is available as the mail transport baseline without adding push, email, or SMS notification features to Version 1.
 
 ## 20.3 Deployment Scope Exclusions
 
@@ -957,6 +992,12 @@ Deployment architecture for Version 1 does not include:
 - Push notifications, email notifications, or SMS notifications.
 - Marketplace infrastructure.
 - Video homework infrastructure.
+- Docker.
+- Redis.
+- Kubernetes.
+- S3 Storage.
+- WebSockets.
+- Microservices.
 
 Detailed environment, release, and infrastructure specifications belong to the deployment planning documentation and are not defined in this architecture document.
 
@@ -969,7 +1010,7 @@ The architecture is constrained by the confirmed Project Context and must not co
 ## 21.1 Confirmed Constraints
 
 1. Version 1 is Web Application only.
-2. The technology stack is Laravel, React, MySQL, REST communication style, and Laravel Sanctum authentication.
+2. The official Version 1 technology stack is Laravel 12, PHP 8.3, React 19, TypeScript, Vite, Tailwind CSS, MySQL 8, REST communication style, Laravel Sanctum authentication, Laravel Gates & Policies, Custom RBAC, File Cache, Database Queue, Database session driver, Laravel Public Storage, Laravel Scheduler with Cron Jobs, SMTP, and Apache or LiteSpeed.
 3. The architecture is Multi-Tenant with each Teacher Workspace isolated.
 4. Student identity is global and unique.
 5. Duplicate Student accounts are not allowed.
@@ -988,6 +1029,9 @@ The architecture is constrained by the confirmed Project Context and must not co
 18. Archive replaces permanent deletion everywhere.
 19. Historical data is never deleted.
 20. Important actions must be recorded in the Audit Log.
+21. Primary deployment target is cPanel Shared Hosting.
+22. Future deployment target is VPS / Cloud.
+23. Version 1 must not require Docker, Redis, Kubernetes, S3 Storage, WebSockets, or Microservices.
 
 ## 21.2 Pending Constraints
 
@@ -998,7 +1042,7 @@ The following items are PENDING and must not be hardened without Product Owner c
 - Teacher Staff permission granularity.
 - Super Admin content visibility.
 - Flat price versus volume tiers.
-- Languages, timezone, currency, and target market/country.
+- Arabic (default) and English (fully supported) are confirmed; timezone, currency, and target market/country.
 
 ---
 
@@ -1027,6 +1071,6 @@ Potential future areas include:
    Super Admin visibility into Teacher-private content remains PENDING and must be resolved before implementation hardens any access model.
 
 7. **Localization and regional configuration**
-   Languages, timezone, currency, and target market/country remain PENDING. Future architecture may define localization and regional infrastructure after confirmation.
+   Arabic (default) and English (fully supported) are confirmed; timezone, currency, and target market/country remain PENDING. Future architecture may define localization and regional infrastructure after confirmation.
 
 All future architecture considerations must preserve the foundational principles of the Platform: Teacher Workspace isolation, one global Student account, one Parent account, private Teacher-owned content, clear Flow A and Flow B separation, Archive instead of deletion, and permanent Audit Log retention.

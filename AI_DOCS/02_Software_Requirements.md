@@ -398,7 +398,7 @@ Several topics remain pending in the Project Context and must be resolved before
 - Teacher Staff permission granularity.
 - Super Admin content visibility.
 - Flat price versus volume tiers.
-- Languages, timezone, currency, and target market/country.
+- Arabic (default) and English (fully supported) are confirmed; timezone, currency, and target market/country.
 
 No software requirement may harden an unresolved pending decision as if it were confirmed.
 
@@ -3785,7 +3785,7 @@ Maintainability requirements ensure the requirements baseline remains consistent
 
 ### Purpose
 
-Localization requirements preserve the official PENDING status of language, timezone, currency, and target market decisions while preventing premature assumptions.
+Localization requirements preserve the confirmed Arabic-default, English-supported automatic RTL/LTR decision while leaving timezone, currency, and target market decisions PENDING.
 
 ### Requirements
 
@@ -3797,7 +3797,7 @@ Localization requirements preserve the official PENDING status of language, time
 
 ### Constraints
 
-- Languages, timezone, currency, and target market/country are PENDING.
+- Arabic (default) and English (fully supported) are confirmed; timezone, currency, and target market/country are PENDING.
 - Proposed defaults are not confirmed requirements.
 - No UI language, translation, formatting, currency, or timezone implementation behavior is specified in this SRS.
 
@@ -3931,3 +3931,12 @@ Archiving Policy requirements define the non-functional behavior of Archive as t
 ---
 
 *End of PART 6 — Non-Functional Requirements.*
+
+
+## Confirmed Audit Clarifications
+
+The following confirmed clarifications are owned by `00_Project_Context.md` §9.9 (BR-023 through BR-025). They do not alter Flow A, Archive, Audit Log, or the external-payment boundary.
+
+- **Parent workflow:** a Parent creates an account through Parent registration and submits a Parent–Student link request. The Teacher responsible for the Student’s active Enrollment approves or rejects it. Approval is allowed only when the Student has no other linked Parent; it creates read-only access. The Parent may request unlinking, and that Teacher approves the unlink. Request, approval, rejection, and unlinking are Audit Log events; historical records remain preserved.
+- **Per Lesson Flow B:** a billable lesson is a Lesson completed for a Group while the Student has an active Enrollment in that Group. The obligation is recorded on completion at the Group’s recorded Price. Drafting, scheduling, publishing, viewing, Attendance, or assignment alone is not billable; one Student has at most one obligation for the same completed lesson. The Platform records payment status only, and payment remains outside the Platform.
+- **Group transfer:** Flow A enrollment duration is accumulated across Groups of the same Teacher in the same Billing Cycle; a transfer does not reset the more-than-15-calendar-days test. Flow B obligations remain tied to the Group and completed Lesson that created them.

@@ -352,7 +352,7 @@ The eighth risk is Teacher Staff permission expectations. Teacher Staff permissi
 
 The ninth risk is pending pricing structure. Pricing is owned by the Super Admin, but the decision between flat price and volume tiers remains pending. This could affect launch planning, commercial messaging, and billing operations.
 
-The tenth risk is localization and regional configuration uncertainty. Languages, timezone, and currency remain pending. These decisions may influence business readiness and market fit, but they must not be silently assumed.
+The tenth risk is localization and regional configuration uncertainty. Arabic (default) and English (fully supported) are confirmed; timezone and currency remain pending. These decisions may influence business readiness and market fit, but they must not be silently assumed.
 
 The eleventh risk is historical-data discipline. The platform requires Archive instead of permanent deletion and requires historical data to remain available. If users expect deletion or if operations fail to preserve history, trust and reporting accuracy may be affected.
 
