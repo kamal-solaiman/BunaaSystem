@@ -17,7 +17,14 @@
     RewriteEngine On
 
     # Deny any request that targets a sensitive application directory.
-    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor|node_modules)(/|$) - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|tests|vendor|node_modules)(/|$) - [F,L]
+
+    # storage/ is denied except the public-storage namespace, which Laravel
+    # exposes through public/storage rather than directly.
+    RewriteRule ^storage(/|$) - [F,L]
+
+    # Deny dotfiles — .env above all — before any rewrite can reach them.
+    RewriteRule (^|/)\. - [F,L]
 
     # Serve everything else through Laravel's front controller in public/.
     RewriteCond %{REQUEST_URI} !^/?public/

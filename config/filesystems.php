@@ -75,8 +75,21 @@ return [
     |
     */
 
-    'links' => [
-        public_path('storage') => storage_path('app/public'),
-    ],
+    /*
+    | Left empty deliberately.
+    |
+    | `php artisan storage:link` creates a filesystem symlink, which shared
+    | hosting frequently disallows and which the deployment target must not
+    | depend on. More importantly, every file request must pass through backend
+    | authorization — Teacher Workspace scope, Student relationship, Parent
+    | linked-Student scope, Archive state, and ownership — and a path must never
+    | be accepted from the browser as proof of access
+    | (AI_DOCS/04_Project_Structure.md §5; 20_File_Storage.md).
+    |
+    | A public symlink would expose stored files by URL and bypass those checks,
+    | so files are delivered through an authorized controller in the Files
+    | phase instead.
+    */
+    'links' => [],
 
 ];

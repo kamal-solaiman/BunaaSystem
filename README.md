@@ -84,17 +84,33 @@ inside the document root, the `public/` directory is the only web-exposed part
 and the root `.htaccess` denies direct access to `app/`, `config/`, `database/`,
 `storage/`, `vendor/`, and `.env` (`AI_DOCS/26_Deployment_Plan.md` §7).
 
-1. Upload the project into `public_html/113`.
-2. Run `composer install --no-dev --optimize-autoloader` on the server.
-3. Build assets locally (`npm run build`) and upload `public/build`; Node is
-   never required on the server.
-4. Create `.env` from `.env.example`, set `APP_URL` to the deployed URL
-   including the `/113` path, and generate `APP_KEY`.
-5. Run `php artisan migrate --force`.
-6. Point the Cron Job at `php artisan schedule:run` once per minute.
+Prepare the release locally, so the server needs no build toolchain:
+
+```bash
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+```
+
+Then:
+
+1. Upload the project — including `vendor/` and `public/build/` — into
+   `public_html/113`. Both are produced locally, so neither Composer nor Node is
+   required on the server. If the host does provide Composer over SSH,
+   `composer install --no-dev --optimize-autoloader` may be run there instead.
+2. Create `.env` from `.env.example`. Set `APP_URL` to the deployed URL
+   including the `/113` path, set `APP_ENV=production` and `APP_DEBUG=false`,
+   and fill the database credentials.
+3. Generate the application key. Over SSH: `php artisan key:generate`. Without
+   SSH, generate it with the cPanel PHP CLI or paste a
+   `base64:`-encoded 32-byte value into `APP_KEY`.
+4. Run the migrations: `php artisan migrate --force`, or import the schema
+   through phpMyAdmin if CLI access is unavailable.
+5. Point a cPanel Cron Job at `php artisan schedule:run` once per minute.
 
 `APP_URL` carries the base path, so the same build works at a domain root or in
-a subdirectory — no path is hardcoded into the bundle.
+a subdirectory — no path is hardcoded into the bundle, and no symlink is used:
+`public/storage` is served through the application rather than a filesystem
+link, which shared hosting often disallows.
 
 ---
 

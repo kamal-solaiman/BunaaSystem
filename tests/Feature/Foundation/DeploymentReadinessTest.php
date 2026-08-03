@@ -94,6 +94,17 @@ final class DeploymentReadinessTest extends TestCase
     }
 
     #[Test]
+    public function no_filesystem_symlink_is_required(): void
+    {
+        // `artisan storage:link` must never be part of deployment: shared
+        // hosting often disallows symlinks, and a public link would expose
+        // stored files by URL, bypassing the authorization every file request
+        // must pass (04_Project_Structure.md §5).
+        $this->assertSame([], config('filesystems.links'));
+        $this->assertFalse(is_link(public_path('storage')));
+    }
+
+    #[Test]
     public function the_private_platform_is_not_offered_for_indexing(): void
     {
         $this->assertStringContainsString('Disallow: /', (string) file_get_contents(public_path('robots.txt')));

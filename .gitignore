@@ -6,7 +6,8 @@
 /public/build
 /public/hot
 
-# Laravel public-storage mapping (created on the server)
+# Never created: no storage symlink is used (see config/filesystems.php).
+# Ignored so an accidental `artisan storage:link` cannot be committed.
 /public/storage
 
 # Runtime storage: uploaded files, logs, framework cache, sessions
