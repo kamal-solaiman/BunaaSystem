@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Support\Database\Archivable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -51,6 +52,20 @@ class User extends Authenticatable
         'password',
         'account_status',
     ];
+
+    /**
+     * The Student context for this identity, when one exists.
+     *
+     * "Student has one global User identity." (07 §6) A User may instead be a
+     * Teacher, Teacher Staff, Parent, or Super Admin; those contexts are added
+     * by their own phases.
+     *
+     * @return HasOne<Student, $this>
+     */
+    public function student(): HasOne
+    {
+        return $this->hasOne(Student::class);
+    }
 
     /**
      * Role contexts held by this identity.

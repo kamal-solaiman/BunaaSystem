@@ -1,21 +1,25 @@
-# Database Contract — Phase 43
+# Database Contract — Phase 43 / 43B
 
-**Status: IMMUTABLE for the tables it covers.**
-**Scope: the foundational identity, access, tenancy, and governance tables built in Phase 43.**
+**Status: DATABASE FOUNDATION FROZEN.**
+**Scope: the foundational identity, access, tenancy, learner, and governance tables built in Phase 43 and Phase 43B.**
 
 This document is the permanent contract for the tables listed below. Once
 frozen, the structure of an `IMMUTABLE` table does not change; only rows are
 added.
 
 Every fact here was read from the built schema, not from the migration source.
-The schema was created by running all 14 migrations against a live database and
+The schema was created by running all 15 migrations against a live database and
 inspecting the result.
 
-> **Important scope note.** This contract does **not** declare the whole
-> database complete. Phase 43 built the foundational entities only. Nine of the
-> thirty-four logical entities in `07_Data_Dictionary.md` are implemented; the
-> rest belong to later phases and will require their own migrations. See §4,
-> which reports one blocking finding for Phase 44.
+> **Scope note.** This contract does not declare the whole database complete.
+> Ten of the thirty-four logical entities in `07_Data_Dictionary.md` are
+> implemented; the rest belong to later phases and will add their own tables.
+> What *is* frozen is the foundation: identity, access, tenancy, the learner
+> entity, and governance. §4 verifies that authentication, RBAC, and Teacher
+> Workspace tenancy each require **zero** further schema change.
+>
+> **Phase 43B** added exactly one table, `students`, resolving the blocking
+> finding this contract raised before Phase 44.
 
 ---
 
@@ -32,6 +36,7 @@ inspecting the result.
 | `teacher_workspaces` | **IMMUTABLE** | No — rows only |
 | `teaching_subjects` | **IMMUTABLE** | No — rows only |
 | `teacher_staff` | **IMMUTABLE** | No — rows only |
+| `students` | **IMMUTABLE** | No — rows only |
 | `audit_log_entries` | **IMMUTABLE** | No — rows only, and rows are never changed |
 | `migrations` | **SYSTEM** | Framework-managed |
 | `sessions` | **SYSTEM** | Framework-managed |
@@ -270,6 +275,38 @@ ten mandatory events for every future phase: Attendance Change, Exam
 Modification, Homework Modification, and Subscription Change are present even
 though those features do not exist yet. No later phase needs a new event type.
 
+## 2.11 `students` — IMMUTABLE  *(Phase 43B)*
+
+**Purpose.** The learner with one global account who may study with multiple
+Teachers. Identity is global; Teacher-specific academic data is partitioned per
+Teacher and lives elsewhere.
+
+| Property | Value |
+|---|---|
+| Primary key | `id` |
+| Foreign keys | `user_id`→`users.id` RESTRICT |
+| Unique constraints | `user_id` — one global Student account per identity (BR-001, BR-022) |
+| Check constraints | `activation_status` ∈ {active, pending_activation}; `created_by_method` ∈ {self_registration, teacher_created} — native `ENUM` on MySQL 8, `CHECK` on SQLite |
+| Indexes | `user_id` (unique), `archived_at`, `(activation_status, created_by_method)` |
+| Archive behavior | `archived_at`. Archived Students leave active queries, stay in history, and keep their identity link. |
+| Audit behavior | Create, update, archive, restore, and login are audited. `actor_role` already accepts `student`. |
+| AI_DOCS | `07 §6`; `06 §12`; `33 STU-01`, `STU-02`, `AUT-13`; BR-001, BR-022 |
+
+**Columns:** `id`, `user_id`, `activation_status`, `account_status`,
+`created_by_method`, `created_at`, `updated_at`, `archived_at`.
+
+**No `teacher_workspace_id`.** A Student is global (BR-001); a workspace column
+would contradict the entity. The per-Teacher link is a separate logical entity
+(Teacher Student Relationship, 06 §4) owned by a later phase.
+
+**`activation_status` has no database default** — the correct initial value
+depends on the registration method, and 07 §6 names two possible defaults
+rather than one (DD-12).
+
+**Why IMMUTABLE.** Both enums are confirmed closed sets, and the entity's seven
+documented attributes are all present. Registration and activation add and
+update **rows**; they need no further columns.
+
 ---
 
 # 3. System tables
@@ -292,60 +329,38 @@ skeleton's cache migration was removed — the table would never be read.
 
 # 4. Future-phase migration analysis
 
-The instruction was: verify that no future authentication, RBAC, or Teacher
-Workspace work requires changing the schema — and **stop and report** if any
-does.
+Each area was checked against the documents and then verified by executing the
+operations against a live database. All three now pass.
 
-I checked each area against the documents rather than assuming. Two areas are
-clear. One is not, and I am reporting it before Phase 44 rather than
-discovering it mid-implementation.
+## 4.1 Authentication — ✅ **NO SCHEMA CHANGE REQUIRED**
 
-## 4.1 Authentication — ⚠️ **REQUIRES NEW TABLES**
+**Resolved by Phase 43B.** The Phase 43 contract reported that the two Student
+endpoints could not be implemented without a `students` table. That table now
+exists, built from `07 §6` with the same traceability discipline.
 
-**Finding: Phase 44 cannot be completed without new migrations.**
+All five endpoints in `10_API_Design.md` §13 are now fully supported:
 
-`10_API_Design.md` §13 defines exactly five authentication endpoints. Three are
-fully supported by the current schema:
+| Endpoint | Storage | Status |
+|---|---|---|
+| `POST /auth/login` | `users`, `sessions`, `personal_access_tokens`, `audit_log_entries` | ✅ |
+| `POST /auth/logout` | `sessions`, `personal_access_tokens` | ✅ |
+| `GET /auth/me` | `users`, `roles`, `role_user`, `permissions`, `permission_teacher_staff` | ✅ |
+| `POST /auth/students/register` | `students` — `created_by_method = self_registration`; duplicate prevention via the unique `user_id` | ✅ |
+| `POST /auth/students/activate` | `students` — `activation_status`, with the `(activation_status, created_by_method)` index serving the AUT-13 lookup | ✅ |
 
-| Endpoint | Schema support |
-|---|---|
-| `POST /auth/login` | ✅ `users`, `sessions`, `personal_access_tokens`, `audit_log_entries` |
-| `POST /auth/logout` | ✅ `sessions` |
-| `GET /auth/me` | ✅ `users`, `roles`, `role_user` |
+Supporting guarantees, each verified by executing the operation rather than
+inspecting the schema:
 
-The remaining two do not:
+- The **full Teacher-created → activation cycle** runs end to end: create a
+  pending account, locate "exactly one pending-activation Teacher-created
+  account" per AUT-13, activate it, and record the change in the Audit Log —
+  with no schema change at any step.
+- **All ten mandatory audit events** of `23 §15.2` are already storable,
+  including the four for features that do not exist yet.
+- **All five role contexts** are already storable in `actor_role`.
+- Password reset has `password_reset_tokens` (`23 §6.2`).
 
-| Endpoint | Blocker |
-|---|---|
-| `POST /auth/students/register` | ❌ No `students` table |
-| `POST /auth/students/activate` | ❌ No `students` table |
-
-`07_Data_Dictionary.md` §6 defines the Student entity with attributes that have
-nowhere to live today — in particular **Activation Status** ("Active or Pending
-Activation") and **Created By Method** ("Self-Registration or Teacher-Created").
-Activation is the entire subject of `/auth/students/activate`, and validation
-rule `AUT-13` requires matching "exactly one pending-activation Teacher-created
-account."
-
-Storing Activation Status on `users.account_status` would be wrong: `07 §6`
-places it on the Student entity, and `07 §1` gives User a *separate* Account
-Status. Conflating them would invent a design the documents do not describe.
-
-**This does not invalidate Phase 43.** The foundational tables are correct and
-complete for what they cover. Phase 43's approved scope was schema + Archive +
-Audit Log for the *foundational* entities; the Student entity was never in it.
-
-**Recommended resolution — your decision:**
-
-| Option | Effect |
-|---|---|
-| **A. Narrow Phase 44** to `login`, `logout`, `me` | No migration needed. Student registration and activation move to a later phase alongside the `students` table. Keeps this contract frozen exactly as written. |
-| **B. Add the `students` table first** | A short Phase 43b creating `students` from `07 §6`, with the same traceability discipline, then Phase 44 delivers all five endpoints. |
-
-I recommend **B** if you want the authentication surface complete in one piece,
-and **A** if you prefer the contract to stay untouched and the phase to stay
-small. Either way the new table would be added under a new contract entry, not
-by modifying an IMMUTABLE table.
+**Verified: authentication requires rows, not migrations.**
 
 ## 4.2 RBAC — ✅ **NO SCHEMA CHANGE REQUIRED**
 
@@ -433,20 +448,35 @@ Every statement above was checked against a live database built by running all
 | Audit immutability | 12 assertions; update and delete both blocked |
 | Q-011 preserved | `permissions` and `role_user` both empty |
 | Phase 43 validation total | **169 assertions, 0 failures** |
+| Phase 43B validation total | **66 assertions, 0 failures** |
+| Phase 44 zero-migration proof | **verified end to end** — full Teacher-created → activation cycle, all 10 audit events, all 5 role contexts |
 
 ---
 
 # 7. Freeze status
 
-**The tables in §2 are frozen as classified**, and the classifications above are
-binding.
+## DATABASE FOUNDATION FROZEN
 
-**A blanket "DATABASE FOUNDATION FROZEN" declaration is withheld**, because §4.1
-found that Phase 44 cannot deliver two of its five documented endpoints without
-a `students` table. Declaring the whole database frozen now would either be
-untrue, or would force the Student entity into `users` in a way `07 §6` does not
-describe.
+The tables in §2 are frozen as classified. Nine are **IMMUTABLE** — structure
+cannot change; only rows may be added. Two are **EXTENDABLE**, and only for
+nullable columns that AI_DOCS explicitly documents. Seven are **SYSTEM**, owned
+by Laravel or Sanctum.
 
-Awaiting your decision between **Option A** (narrow Phase 44) and **Option B**
-(add `students` first). Once chosen, the foundation can be declared frozen with
-that decision recorded.
+The blocking finding this contract raised before Phase 44 is resolved. All
+three required verifications now pass:
+
+| Verification | Result |
+|---|---|
+| No future **authentication** work requires a schema change | ✅ **CONFIRMED** — all five endpoints of `10 §13` are fully supported; proven by executing the full Teacher-created → activation cycle |
+| No future **RBAC** work requires a schema change | ✅ **CONFIRMED** — resolving Q-011 inserts rows into `permissions` and `permission_teacher_staff` |
+| No future **Teacher Workspace** tenancy work requires a schema change | ✅ **CONFIRMED** — later workspace-owned entities add new tables carrying `teacher_workspace_id` |
+
+One pre-authorized future change remains, recorded in §4.4:
+`teachers.subscription_status_id`, a nullable foreign key that `07 §4` documents
+as Optional and that awaits the `subscriptions` table.
+
+**Phase 44 may proceed and will require zero schema changes.**
+
+Later feature phases will add their own new tables — Educational Grades, Groups,
+Enrollment, Attendance, Homework, Exams, Parent, and the rest. That is expected
+growth, not a change to a frozen table, and it does not reopen this contract.
