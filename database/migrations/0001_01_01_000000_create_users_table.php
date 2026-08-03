@@ -6,6 +6,15 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Baseline identity, session, and password-reset tables.
+ *
+ * Two columns from the Laravel skeleton are deliberately absent:
+ * `email_verified_at` and `remember_token`. No AI_DOCS document requires email
+ * verification or a persistent "remember me" login, and
+ * 07_Data_Dictionary.md §1 does not list either attribute. Keeping them would
+ * be a speculative field. See PHYSICAL_SCHEMA_DECISIONS.md DD-08.
+ */
 return new class extends Migration
 {
     /**
@@ -17,9 +26,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->rememberToken();
             $table->timestamps();
         });
 

@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\Database\Archivable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -17,10 +19,11 @@ use Laravel\Sanctum\HasApiTokens;
  * account and may study with multiple Teachers; a Parent has one account and
  * may monitor multiple linked Students.
  *
- * Foundation only: this holds the framework authentication contract. Roles,
- * permissions, Teacher Workspace ownership, relationships, Archive state, and
- * every business attribute arrive with their own phases, driven by
- * 06_Database_Design.md and 07_Data_Dictionary.md.
+ * "User identity is global. Role-specific access is controlled separately
+ * through Role, Permission, and contextual relationships." (§1 Notes)
+ *
+ * "No hard delete exists for User records." (§1 Business Rules) — the account
+ * is archived, never removed.
  *
  * @property int $id
  * @property string $name
@@ -29,9 +32,9 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory;
-
+    use Archivable;
     use HasApiTokens;
+    use HasFactory;
     use Notifiable;
 
     /**
@@ -46,7 +49,24 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'account_status',
     ];
+
+    /**
+     * Role contexts held by this identity.
+     *
+     * "A User may have one or more Role contexts." (§1 Relationships) The
+     * pivot carries the Teacher Workspace for workspace-scoped roles, because
+     * "A Role is assigned to a User in a specific context." (§2)
+     *
+     * @return BelongsToMany<Role, $this>
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class, 'role_user')
+            ->withPivot('teacher_workspace_id')
+            ->withTimestamps();
+    }
 
     /**
      * Attributes hidden from array and JSON output.
@@ -55,7 +75,6 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
     ];
 
     /**
@@ -64,7 +83,6 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
             // Hashed on assignment so a plaintext secret can never be persisted.
             'password' => 'hashed',
         ];
