@@ -88,7 +88,10 @@ export function normalizeError(error: unknown, fallbackMessage: string): ApiErro
         }
 
         const envelope = isErrorEnvelope(response.data) ? response.data : null;
-        const retryAfterHeader = response.headers?.['retry-after'];
+
+        // Axios types header values loosely, so narrow through `unknown` rather
+        // than trusting the indexed access (28_Coding_Standards.md §6.6).
+        const retryAfterHeader: unknown = response.headers?.['retry-after'];
         const retryAfter =
             typeof retryAfterHeader === 'string' && retryAfterHeader.trim() !== ''
                 ? Number.parseInt(retryAfterHeader, 10)

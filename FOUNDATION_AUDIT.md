@@ -2,7 +2,7 @@
 
 **Audited commit:** foundation of the Bunaa System Version 1 project skeleton
 **Scope:** every generated file, verified against `AI_DOCS/00`–`AI_DOCS/41`
-**Result:** **100% PASS** — 7 failures were found during the audit and all 7 were fixed and re-verified.
+**Result:** **100% PASS** — 8 failures were found (7 during the audit, 1 during the freeze) and all 8 were fixed and re-verified.
 
 Verification was executed, not assumed. A PHP 8.3.32 runtime and Laravel 12.64 were assembled in the sandbox so the application could be really booted and driven with real HTTP requests. Every claim below is backed by an executed check.
 
@@ -12,6 +12,7 @@ Verification was executed, not assumed. A PHP 8.3.32 runtime and Laravel 12.64 w
 | Application boots and serves after every fix | **verified** |
 | PHP syntax (PHP 8 parser, all source files) | **0 errors** |
 | `declare(strict_types=1)` coverage | **47 / 47 tracked PHP files** |
+| ESLint (`--max-warnings=0`) | **PASS** (gate was broken — fixed) |
 | TypeScript strict typecheck | **PASS** |
 | Vitest | **13 passed** |
 | Production build (`vite build`) | **PASS** |
@@ -22,7 +23,7 @@ Verification was executed, not assumed. A PHP 8.3.32 runtime and Laravel 12.64 w
 
 ## 1. Failures found and fixed
 
-The audit was only useful because it found real problems. All seven are fixed and re-verified.
+The audit was only useful because it found real problems. All eight are fixed and re-verified.
 
 ### FAIL-01 — Feature-Based Architecture did not survive a clone — **CRITICAL**
 
@@ -76,6 +77,25 @@ A 0-byte `public/favicon.ico` was referenced by the shell, guaranteeing a broken
 `AI_DOCS/28_Coding_Standards.md` §4.6 requires *"All PHP files must declare `declare(strict_types=1);`"*, and `pint.json` enables the `declare_strict_types` rule with `public/` in scope — so `composer lint` would have failed on the first run. The file was copied from the Laravel skeleton, which does not declare it.
 
 **Fix:** declaration added. **Verified:** the application still boots and serves through the front controller (shell 200 with `lang="ar" dir="rtl"`, API 404 JSON), so the stricter typing broke nothing. Coverage is now 47/47 tracked PHP files. The single Blade template is exempt by nature: `declare()` must be the first statement, which a compiled view cannot guarantee.
+
+### FAIL-08 — `npm run lint` was a broken gate (found during freeze) — **MEDIUM**
+
+`package.json` declared an `npm run lint` script and four ESLint dependencies,
+but no `eslint.config.js` existed. The command failed outright with *"ESLint
+couldn't find an eslint.config.(js|mjs|cjs) file"* — a documented quality gate
+that could never have run, which is worse than no gate because it implies
+coverage that is absent.
+
+**Fix:** added `eslint.config.js` enforcing the rules `28_Coding_Standards.md`
+§5–§6 states but a type-checker cannot catch — Rules of Hooks (§5.3), the
+prohibition on `any` (§6.6), and unused-binding detection.
+
+**It immediately paid for itself:** the first successful run found a genuine
+unsafe `any` in `resources/js/lib/api-error.ts`, where axios types header values
+loosely and TypeScript had accepted the indexed read. Narrowed through
+`unknown`. **Verified:** `npm run lint` now exits clean with `--max-warnings=0`.
+
+---
 
 ---
 
@@ -287,6 +307,6 @@ The 44 `.gitkeep` and 18 `.gitignore` files exist to make Git preserve directori
 
 **Every audited item is PASS.**
 
-Seven failures were found — two of them serious. Uploading the previous commit to `public_html/113` would have exposed `.env`, and a fresh clone would have lost the entire Feature-Based Architecture. All seven are fixed, and the structural and deployment fixes are protected by tests so they cannot silently regress.
+Eight failures were found — two of them serious. Uploading the previous commit to `public_html/113` would have exposed `.env`, and a fresh clone would have lost the entire Feature-Based Architecture. All eight are fixed, and the structural and deployment fixes are protected by tests so they cannot silently regress.
 
 The foundation is consistent with `AI_DOCS/00`–`41`, contains no business logic, and is ready for **Phase 43**.
