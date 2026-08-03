@@ -116,4 +116,24 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | AI_DOCS/33_Validation_Rules.md AUT-05 confirms that authentication
+    | endpoints must be rate-limited, while stating the threshold and window
+    | are not confirmed and "must not be presented as product values".
+    |
+    | They are therefore configuration, tunable per environment, and are never
+    | disclosed in a response (23_Security_Standards.md §3.3).
+    |
+    */
+
+    'rate_limit' => [
+        'attempts' => (int) env('AUTH_RATE_LIMIT_ATTEMPTS', 5),
+        'decay_minutes' => (int) env('AUTH_RATE_LIMIT_DECAY_MINUTES', 1),
+    ],
+
 ];

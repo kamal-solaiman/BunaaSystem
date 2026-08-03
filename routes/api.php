@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Authentication\CurrentUserController;
+use App\Http\Controllers\Authentication\LoginController;
+use App\Http\Controllers\Authentication\LogoutController;
+use App\Http\Controllers\Authentication\StudentActivationController;
+use App\Http\Controllers\Authentication\StudentRegistrationController;
 use App\Support\Api\ApiResponse;
 use App\Support\Api\ErrorCode;
 use Illuminate\Support\Facades\Route;
@@ -22,21 +27,42 @@ use Illuminate\Support\Facades\Route;
 |   /api/v1/student/{resource}
 |   /api/v1/parent/{resource}
 |
-| Foundation phase: no endpoint is registered. The scope groups below are
-| reserved, empty access boundaries so each later phase attaches its documented
-| routes to an already-correct structure. Endpoints are only ever added from the
-| catalog in 10_API_Design.md §13–§30 — never invented.
+| The authentication endpoints of §13 are registered. The remaining scope
+| groups stay reserved and empty until their own phases. Endpoints are only
+| ever added from the catalog in 10_API_Design.md §13–§30 — never invented.
 |
 | Version 1 defines no notification endpoints (10_API_Design.md §29).
 |
 */
 
+/*
+| Authentication — 10_API_Design.md §13.
+|
+| Exactly the five documented endpoints; no other authentication surface
+| exists. "Login as Teacher" impersonation is explicitly not part of Version 1
+| (10 §3 rule 5).
+|
+| The public endpoints are rate-limited: 33_Validation_Rules.md AUT-05 confirms
+| that a limit must exist while deliberately leaving the threshold unconfirmed,
+| so the numeric value lives in configuration rather than being presented as a
+| product number.
+*/
 Route::prefix('auth')->name('auth.')->group(static function (): void {
-    /*
-     * Registered in the Authentication phase, per 10_API_Design.md §13:
-     * POST auth/login, POST auth/logout, GET auth/me,
-     * POST auth/students/register, POST auth/students/activate.
-     */
+    Route::middleware('throttle:auth')->group(static function (): void {
+        Route::post('login', LoginController::class)->name('login');
+
+        Route::prefix('students')->name('students.')->group(static function (): void {
+            Route::post('register', StudentRegistrationController::class)->name('register');
+            // Activation is the documented authentication exception path: the
+            // account cannot be logged into until it is activated.
+            Route::post('activate', StudentActivationController::class)->name('activate');
+        });
+    });
+
+    Route::middleware('auth:sanctum')->group(static function (): void {
+        Route::post('logout', LogoutController::class)->name('logout');
+        Route::get('me', CurrentUserController::class)->name('me');
+    });
 });
 
 Route::middleware('auth:sanctum')->group(static function (): void {

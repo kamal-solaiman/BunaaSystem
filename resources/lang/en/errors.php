@@ -20,7 +20,9 @@ return [
 
     // Authentication
     'AUTH_UNAUTHENTICATED' => 'Authentication is required.',
+    'AUTH_INVALID_CREDENTIALS' => 'The provided credentials are incorrect.',
     'AUTH_SESSION_EXPIRED' => 'Your session has expired. Please log in again.',
+    'AUTH_LOGIN_RATE_LIMITED' => 'Too many login attempts. Please try again later.',
 
     // Authorization
     'AUTHZ_UNAUTHORIZED' => 'You do not have permission to perform this action.',
@@ -33,6 +35,11 @@ return [
     'API_UNSUPPORTED_ROUTE' => 'Not found.',
     'API_RATE_LIMIT_EXCEEDED' => 'Too many requests. Please try again later.',
     'RESOURCE_NOT_FOUND' => 'Not found.',
+
+    // Student module
+    'STUDENT_DUPLICATE_ACCOUNT' => 'An account with this identity already exists.',
+    'STUDENT_ACTIVATION_MISMATCH' => 'The activation details do not match any account awaiting activation.',
+    'STUDENT_ACCOUNT_ALREADY_ACTIVE' => 'This account is already active. You can log in.',
 
     // System
     'SYSTEM_UNEXPECTED' => 'An unexpected error occurred.',

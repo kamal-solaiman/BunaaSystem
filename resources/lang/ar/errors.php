@@ -22,7 +22,9 @@ return [
 
     // المصادقة
     'AUTH_UNAUTHENTICATED' => 'المصادقة مطلوبة.',
+    'AUTH_INVALID_CREDENTIALS' => 'بيانات الاعتماد المُدخلة غير صحيحة.',
     'AUTH_SESSION_EXPIRED' => 'انتهت صلاحية جلستك. يرجى تسجيل الدخول مرة أخرى.',
+    'AUTH_LOGIN_RATE_LIMITED' => 'محاولات تسجيل دخول كثيرة جداً. يرجى المحاولة لاحقاً.',
 
     // التفويض
     'AUTHZ_UNAUTHORIZED' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
@@ -35,6 +37,11 @@ return [
     'API_UNSUPPORTED_ROUTE' => 'غير موجود.',
     'API_RATE_LIMIT_EXCEEDED' => 'طلبات كثيرة جداً. يرجى المحاولة لاحقاً.',
     'RESOURCE_NOT_FOUND' => 'غير موجود.',
+
+    // وحدة الطالب
+    'STUDENT_DUPLICATE_ACCOUNT' => 'يوجد حساب بهذه الهوية بالفعل.',
+    'STUDENT_ACTIVATION_MISMATCH' => 'بيانات التفعيل لا تطابق أي حساب في انتظار التفعيل.',
+    'STUDENT_ACCOUNT_ALREADY_ACTIVE' => 'هذا الحساب مُفعَّل بالفعل. يمكنك تسجيل الدخول.',
 
     // النظام
     'SYSTEM_UNEXPECTED' => 'حدث خطأ غير متوقع.',

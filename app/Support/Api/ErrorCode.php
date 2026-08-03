@@ -17,10 +17,17 @@ enum ErrorCode: string
 {
     // §5 Authentication
     case AuthUnauthenticated = 'AUTH_UNAUTHENTICATED';
+    case AuthInvalidCredentials = 'AUTH_INVALID_CREDENTIALS';
     case AuthSessionExpired = 'AUTH_SESSION_EXPIRED';
+    case AuthLoginRateLimited = 'AUTH_LOGIN_RATE_LIMITED';
 
     // §6 Authorization
     case AuthzUnauthorized = 'AUTHZ_UNAUTHORIZED';
+
+    // §9 Student module
+    case StudentDuplicateAccount = 'STUDENT_DUPLICATE_ACCOUNT';
+    case StudentActivationMismatch = 'STUDENT_ACTIVATION_MISMATCH';
+    case StudentAccountAlreadyActive = 'STUDENT_ACCOUNT_ALREADY_ACTIVE';
 
     // §7 Validation
     case ValidationFailed = 'VALIDATION_FAILED';
@@ -40,11 +47,18 @@ enum ErrorCode: string
     public function status(): int
     {
         return match ($this) {
-            self::AuthUnauthenticated, self::AuthSessionExpired => 401,
+            self::AuthUnauthenticated,
+            self::AuthInvalidCredentials,
+            self::AuthSessionExpired => 401,
             self::AuthzUnauthorized => 403,
-            self::ApiUnsupportedRoute, self::ResourceNotFound => 404,
+            self::ApiUnsupportedRoute,
+            self::ResourceNotFound,
+            self::StudentActivationMismatch => 404,
+            self::StudentDuplicateAccount,
+            self::StudentAccountAlreadyActive => 409,
             self::ValidationFailed => 422,
-            self::ApiRateLimitExceeded => 429,
+            self::ApiRateLimitExceeded,
+            self::AuthLoginRateLimited => 429,
             self::ApiMalformedRequest => 400,
             self::SystemUnexpected => 500,
         };

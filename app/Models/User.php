@@ -93,6 +93,22 @@ class User extends Authenticatable
     ];
 
     /**
+     * Disables Laravel's "remember me" token.
+     *
+     * No AI_DOCS document requires persistent login, so the `remember_token`
+     * column was deliberately not created (PHYSICAL_SCHEMA_DECISIONS.md DD-08).
+     * Laravel's session guard reads the token during logout, so an empty name
+     * tells the framework there is none — `getRememberToken()` then returns
+     * null instead of faulting on a missing attribute.
+     *
+     * This keeps the frozen schema untouched: the alternative would be adding
+     * a column for a feature Version 1 does not have.
+     *
+     * @var string
+     */
+    protected $rememberTokenName = '';
+
+    /**
      * @return array<string, string>
      */
     protected function casts(): array
