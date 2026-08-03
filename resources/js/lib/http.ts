@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import { env } from '@/config/env';
 import { ApiError, normalizeError } from '@/lib/api-error';
+import { t } from '@/locales';
 import type { ApiPaginated, ApiSuccess } from '@/types/api';
 
 /**
@@ -41,7 +42,7 @@ export function setUnauthenticatedHandler(handler: UnauthenticatedHandler | null
 client.interceptors.response.use(
     (response) => response,
     (error: unknown) => {
-        const normalized = normalizeError(error, 'The request could not be completed.');
+        const normalized = normalizeError(error, t('error.request_failed'));
 
         if (normalized.kind === 'unauthenticated') {
             onUnauthenticated?.();
@@ -67,7 +68,7 @@ async function unwrap<TData>(request: Promise<{ data: unknown }>): Promise<TData
     if (typeof body !== 'object' || body === null || !('data' in body)) {
         throw new ApiError({
             kind: 'server',
-            message: 'The server returned an unexpected response.',
+            message: t('error.unexpected_response'),
         });
     }
 

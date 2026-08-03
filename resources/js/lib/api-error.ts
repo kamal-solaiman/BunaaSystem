@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { t } from '@/locales';
 import type { ApiErrorEnvelope, ApiErrorKind } from '@/types/api';
 
 /**
@@ -75,7 +76,7 @@ export function normalizeError(error: unknown, fallbackMessage: string): ApiErro
     }
 
     if (axios.isCancel(error)) {
-        return new ApiError({ kind: 'cancelled', message: 'Request cancelled.' });
+        return new ApiError({ kind: 'cancelled', message: t('error.request_cancelled') });
     }
 
     if (axios.isAxiosError(error)) {

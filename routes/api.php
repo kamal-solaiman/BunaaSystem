@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use App\Support\Api\ApiResponse;
 use App\Support\Api\ErrorCode;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -17,20 +16,27 @@ use Illuminate\Support\Facades\Route;
 |
 | Scope groups follow AI_DOCS/28_Coding_Standards.md §13.1:
 |
-|   /api/v1/auth/{action}
+|   /api/v1/auth/{action}                Authentication
 |   /api/v1/platform/{resource}          Super Admin
 |   /api/v1/teacher-workspace/{resource} Teacher and Teacher Staff
 |   /api/v1/student/{resource}
 |   /api/v1/parent/{resource}
 |
-| Foundation phase: no feature endpoints are registered. Scope groups are
-| declared as empty, reserved boundaries so later phases attach routes to an
-| already-correct access structure. No notification routes exist in Version 1.
+| Foundation phase: no endpoint is registered. The scope groups below are
+| reserved, empty access boundaries so each later phase attaches its documented
+| routes to an already-correct structure. Endpoints are only ever added from the
+| catalog in 10_API_Design.md §13–§30 — never invented.
+|
+| Version 1 defines no notification endpoints (10_API_Design.md §29).
 |
 */
 
 Route::prefix('auth')->name('auth.')->group(static function (): void {
-    // Registered in the authentication phase.
+    /*
+     * Registered in the Authentication phase, per 10_API_Design.md §13:
+     * POST auth/login, POST auth/logout, GET auth/me,
+     * POST auth/students/register, POST auth/students/activate.
+     */
 });
 
 Route::middleware('auth:sanctum')->group(static function (): void {
@@ -49,18 +55,6 @@ Route::middleware('auth:sanctum')->group(static function (): void {
     Route::prefix('parent')->name('parent.')->group(static function (): void {
         // Parent, linked-Student read-only scope.
     });
-
-    /*
-    | Returns the authenticated context and is the reference implementation of
-    | a protected endpoint: it proves the Sanctum guard, the JSON error
-    | envelope, and the scope groups above are wired correctly before any
-    | feature route exists. It exposes only the framework identity fields the
-    | User model already declares — no role, permission, or workspace data,
-    | which belong to the authentication and authorization phases.
-    */
-    Route::get('session', static fn (Request $request) => ApiResponse::success([
-        'id' => $request->user()?->getAuthIdentifier(),
-    ]))->name('session');
 });
 
 /*

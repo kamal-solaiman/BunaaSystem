@@ -1,0 +1,38 @@
+# Application-root protection for cPanel Shared Hosting.
+#
+# Required by AI_DOCS/26_Deployment_Plan.md §7: when the hosting model places the
+# application root inside the document root — which is the case for
+# public_html/113 — additional rules must deny direct access to sensitive
+# directories (app/, config/, database/, storage/, vendor/) and to .env.
+#
+# public/ remains the only directory intended to serve HTTP traffic. Requests
+# that reach the application root are redirected into it, so the deployment
+# needs no symlink and no cPanel document-root change.
+
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Deny any request that targets a sensitive application directory.
+    RewriteRule ^(app|bootstrap|config|database|resources|routes|storage|tests|vendor|node_modules)(/|$) - [F,L]
+
+    # Serve everything else through Laravel's front controller in public/.
+    RewriteCond %{REQUEST_URI} !^/?public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Deny sensitive files outright, including when mod_rewrite is unavailable.
+<FilesMatch "^(\.env.*|\.git.*|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|pint\.json|artisan|.*\.md|.*\.ts|.*\.tsx|vite\.config\..*|vitest\.config\..*|tailwind\.config\..*|postcss\.config\..*|tsconfig\.json)$">
+    Require all denied
+</FilesMatch>
+
+# Deny dotfiles.
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Never list directory contents.
+Options -Indexes

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature\Foundation;
 
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -39,44 +39,33 @@ final class ApiFoundationTest extends TestCase
     }
 
     #[Test]
-    public function protected_endpoint_rejects_a_guest_without_redirecting(): void
+    public function the_sanctum_guard_is_available_for_protected_scopes(): void
     {
-        // A guest reaching a protected endpoint must receive 401 JSON, never an
-        // HTML login redirect.
-        $response = $this->getJson('/api/v1/session');
-
-        $response
-            ->assertUnauthorized()
-            ->assertJson([
-                'success' => false,
-                'error' => ['code' => 'AUTH_UNAUTHENTICATED'],
-            ]);
+        // The scope groups in routes/api.php are protected by auth:sanctum.
+        // No endpoint exists yet, so this verifies the guard itself resolves —
+        // if it did not, every protected route added later would fault as 500
+        // instead of answering 401.
+        $this->assertNotNull(config('auth.guards.sanctum'));
+        $this->assertSame('sanctum', config('auth.guards.sanctum.driver'));
     }
 
     #[Test]
-    public function protected_endpoint_serves_an_authenticated_user(): void
+    public function the_versioned_prefix_is_api_v1(): void
     {
-        $user = User::factory()->create();
-
-        $this->actingAs($user, 'sanctum')
-            ->getJson('/api/v1/session')
-            ->assertOk()
-            ->assertJson([
-                'success' => true,
-                'data' => ['id' => $user->id],
-            ]);
+        // Any unmatched request under the prefix reaches the API fallback and
+        // returns the JSON envelope rather than the HTML shell.
+        $this->getJson('/api/v1/anything')
+            ->assertNotFound()
+            ->assertJson(['error' => ['code' => 'API_UNSUPPORTED_ROUTE']]);
     }
 
     #[Test]
-    public function a_wrong_http_verb_is_rejected_as_an_invalid_operation(): void
+    public function no_notification_endpoint_exists(): void
     {
-        // 405 must not surface as a server fault.
-        $this->postJson('/api/v1/session')
-            ->assertStatus(400)
-            ->assertJson([
-                'success' => false,
-                'error' => ['code' => 'API_MALFORMED_REQUEST'],
-            ]);
+        // Notifications are out of scope for Version 1 (10_API_Design.md §29).
+        foreach (Route::getRoutes() as $route) {
+            $this->assertStringNotContainsString('notification', $route->uri());
+        }
     }
 
     #[Test]

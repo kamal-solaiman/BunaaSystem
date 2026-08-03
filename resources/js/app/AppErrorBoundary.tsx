@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type JSX, type ReactNode } from 'react';
+import { t } from '@/locales';
 
 interface Props {
     children: ReactNode;
@@ -54,17 +55,17 @@ export class AppErrorBoundary extends Component<Props, State> {
             >
                 <div className="w-full max-w-md rounded-card border border-border bg-surface-raised p-6 text-center">
                     <h1 className="text-lg font-semibold text-content">
-                        Something went wrong
+                        {t('error.unexpected.title')}
                     </h1>
                     <p className="mt-2 text-sm text-content-muted">
-                        An unexpected error occurred. Please reload the page and try again.
+                        {t('error.unexpected.body')}
                     </p>
                     <button
                         type="button"
                         onClick={this.handleReload}
                         className="mt-5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-content"
                     >
-                        Reload
+                        {t('common.reload')}
                     </button>
                 </div>
             </div>

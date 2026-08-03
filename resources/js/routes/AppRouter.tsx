@@ -1,6 +1,7 @@
 import { Suspense, type JSX } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import { routerBasename } from '@/routes/basename';
+import { t } from '@/locales';
 
 /**
  * Route composition.
@@ -44,7 +45,7 @@ function RouteFallback(): JSX.Element {
             aria-live="polite"
             className="flex min-h-screen items-center justify-center"
         >
-            <span className="text-sm text-content-muted">Loading…</span>
+            <span className="text-sm text-content-muted">{t('common.loading')}</span>
         </div>
     );
 }
@@ -58,7 +59,7 @@ function RouteFallback(): JSX.Element {
 function NotFoundRoute(): JSX.Element {
     return (
         <div className="flex min-h-screen items-center justify-center p-6">
-            <p className="text-sm text-content-muted">Not found.</p>
+            <p className="text-sm text-content-muted">{t('common.not_found')}</p>
         </div>
     );
 }

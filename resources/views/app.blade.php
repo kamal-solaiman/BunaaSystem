@@ -35,8 +35,6 @@
 
     <title>{{ config('app.name') }}</title>
 
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-
     @viteReactRefresh
     @vite(['resources/js/styles/app.css', 'resources/js/app/main.tsx'])
 </head>
