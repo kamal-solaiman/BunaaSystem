@@ -23,6 +23,12 @@ enum ErrorCode: string
 
     // §6 Authorization
     case AuthzUnauthorized = 'AUTHZ_UNAUTHORIZED';
+    case AuthzCrossWorkspaceAccess = 'AUTHZ_CROSS_WORKSPACE_ACCESS';
+    case AuthzWorkspaceContextMismatch = 'AUTHZ_WORKSPACE_CONTEXT_MISMATCH';
+    case AuthzStaffPermissionMissing = 'AUTHZ_STAFF_PERMISSION_MISSING';
+    case AuthzFlowAManagementDenied = 'AUTHZ_FLOW_A_MANAGEMENT_DENIED';
+    case AuthzVisibilityExpansionDenied = 'AUTHZ_VISIBILITY_EXPANSION_DENIED';
+    case ParentWriteDenied = 'PARENT_WRITE_DENIED';
 
     // §9 Student module
     case StudentDuplicateAccount = 'STUDENT_DUPLICATE_ACCOUNT';
@@ -50,7 +56,13 @@ enum ErrorCode: string
             self::AuthUnauthenticated,
             self::AuthInvalidCredentials,
             self::AuthSessionExpired => 401,
-            self::AuthzUnauthorized => 403,
+            self::AuthzUnauthorized,
+            self::AuthzCrossWorkspaceAccess,
+            self::AuthzWorkspaceContextMismatch,
+            self::AuthzStaffPermissionMissing,
+            self::AuthzFlowAManagementDenied,
+            self::AuthzVisibilityExpansionDenied,
+            self::ParentWriteDenied => 403,
             self::ApiUnsupportedRoute,
             self::ResourceNotFound,
             self::StudentActivationMismatch => 404,

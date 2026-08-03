@@ -26,6 +26,12 @@ return [
 
     // Authorization
     'AUTHZ_UNAUTHORIZED' => 'You do not have permission to perform this action.',
+    'AUTHZ_CROSS_WORKSPACE_ACCESS' => 'You do not have permission to perform this action.',
+    'AUTHZ_WORKSPACE_CONTEXT_MISMATCH' => 'The selected items cannot be used together.',
+    'AUTHZ_STAFF_PERMISSION_MISSING' => 'You do not have permission to perform this action.',
+    'AUTHZ_FLOW_A_MANAGEMENT_DENIED' => 'You do not have permission to perform this action.',
+    'AUTHZ_VISIBILITY_EXPANSION_DENIED' => 'This content is not available.',
+    'PARENT_WRITE_DENIED' => 'You do not have permission to perform this action.',
 
     // Validation
     'VALIDATION_FAILED' => 'The submitted data is invalid.',

@@ -14,9 +14,11 @@ use Illuminate\Database\Seeder;
  * Production seeding must never quietly create accounts, permissions, payment
  * records, or business data (AI_DOCS/04_Project_Structure.md §4).
  *
- * Foundation phase: nothing is seeded. Reference data such as the role and
- * permission catalog arrives with the authorization phase, from the confirmed
- * permission matrix.
+ * Roles and the permission catalogue are **approved reference data**: both sets
+ * are closed and confirmed by 07_Data_Dictionary.md §2 and
+ * 09_Permission_Matrix.md, and both are frozen. Seeding them creates no account
+ * and grants nothing — a permission exists in the catalogue but is held by
+ * nobody until it is assigned.
  */
 final class DatabaseSeeder extends Seeder
 {
@@ -24,6 +26,9 @@ final class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        //
+        $this->call([
+            RoleSeeder::class,
+            PermissionSeeder::class,
+        ]);
     }
 }

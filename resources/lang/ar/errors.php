@@ -28,6 +28,12 @@ return [
 
     // التفويض
     'AUTHZ_UNAUTHORIZED' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
+    'AUTHZ_CROSS_WORKSPACE_ACCESS' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
+    'AUTHZ_WORKSPACE_CONTEXT_MISMATCH' => 'لا يمكن استخدام العناصر المحددة معاً.',
+    'AUTHZ_STAFF_PERMISSION_MISSING' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
+    'AUTHZ_FLOW_A_MANAGEMENT_DENIED' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
+    'AUTHZ_VISIBILITY_EXPANSION_DENIED' => 'هذا المحتوى غير متاح.',
+    'PARENT_WRITE_DENIED' => 'ليس لديك صلاحية لتنفيذ هذا الإجراء.',
 
     // التحقق من صحة البيانات
     'VALIDATION_FAILED' => 'البيانات المُرسلة غير صالحة.',

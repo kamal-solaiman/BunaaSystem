@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Features\Authorization\Services\PermissionRegistrar;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,13 +16,16 @@ use Illuminate\Support\ServiceProvider;
  * authority for every access decision; the frontend never substitutes for it
  * (28_Coding_Standards.md §1.3).
  *
- * Foundation only: no roles, permissions, gates, or policies are defined here.
- * They arrive with the authorization phase, driven by the permission matrix.
+ * Every confirmed permission is registered as a Gate ability. Resource-level
+ * conditions — own workspace, own account, linked Student — remain with the
+ * policy that owns the resource, which asks PermissionResolver directly.
  */
 final class AuthServiceProvider extends ServiceProvider
 {
     /**
      * Policy registrations: model class => policy class.
+     *
+     * Resource policies are added by the feature phase that owns each model.
      *
      * @var array<class-string, class-string>
      */
@@ -32,6 +36,8 @@ final class AuthServiceProvider extends ServiceProvider
         foreach ($this->policies as $model => $policy) {
             Gate::policy($model, $policy);
         }
+
+        $this->app->make(PermissionRegistrar::class)->register();
 
         /*
          * Deny by default (23_Security_Standards.md §2.1).
