@@ -30,12 +30,13 @@ removes the assembly step: the repository *is* the deployable unit.
 It also removes a class of drift. With one `composer.json`, one `package.json`,
 and one `.env`, configuration cannot disagree with itself.
 
-**A documented divergence.** `AI_DOCS/04_Project_Structure.md` §1 describes a
-repository with separate `backend/` and `frontend/` roots. The Phase 42 brief
-supersedes it. This is the **only** place the foundation knowingly departs from
-that document, and it is recorded here rather than applied silently.
-`04_Project_Structure.md` should be amended to match before Phase 43, per
-`PROJECT_CONSTRAINTS.md` §3.10.
+**A documented divergence, since reconciled.** `AI_DOCS/04_Project_Structure.md`
+§1 originally described a repository with separate `backend/` and `frontend/`
+roots. The Phase 42 brief superseded it. This was the **only** place the
+foundation knowingly departed from that document, and it was recorded here
+rather than applied silently. The document was amended by explicit approval
+before Phase 43 — a documentation-only change recorded in
+`FOUNDATION_CHANGELOG.md` §7 — so the canonical map and the code now agree.
 
 **Rejected.** A monorepo with two roots and a build step that copies the bundle
 into Laravel's `public/` — rejected because it reintroduces the assembly step

@@ -174,10 +174,11 @@ contributor then works from a false map.
 §4. Renaming a feature also requires checking canonical terminology
 (`04_Project_Structure.md` §11).
 
-**Outstanding.** `AI_DOCS/04_Project_Structure.md` §1 still describes separate
-`backend/` and `frontend/` roots, which the Phase 42 brief superseded (D-F01).
-It should be amended before Phase 43 so the map matches the territory. This is
-the one known documentation debt at freeze time.
+**Resolved.** `AI_DOCS/04_Project_Structure.md` described separate `backend/`
+and `frontend/` roots, which the Phase 42 brief superseded (D-F01). It was
+amended by explicit approval before Phase 43 in a documentation-only change
+recorded in `FOUNDATION_CHANGELOG.md` §7. `AI_DOCS` and the codebase are
+synchronized, and there is no outstanding documentation debt.
 
 ---
 

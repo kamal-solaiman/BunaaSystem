@@ -5,13 +5,16 @@ not create, with the reason for each and the `AI_DOCS` section that required it.
 
 **Baseline:** commit `4b7c205`, a repository containing only `AI_DOCS/` and
 `.gitattributes`.
-**Result at freeze:** **150 files added**, **0 deleted**, **0 renamed**. Nothing
-that existed before the foundation was touched — `AI_DOCS/` is byte-identical
-(verified: 0 changed files under `AI_DOCS/`).
+**Result at freeze:** **150 files added**, **0 deleted**, **0 renamed**.
 
 Of those 150: 146 in the Phase 42 + audit commits, plus `eslint.config.js` and
 the three freeze documents (`FOUNDATION_CHANGELOG.md`,
 `FOUNDATION_DECISIONS.md`, `PROJECT_CONSTRAINTS.md`).
+
+**Post-freeze:** exactly one file under `AI_DOCS/` has been modified —
+`04_Project_Structure.md`, by explicit approval, to bring the canonical
+structure map into line with the frozen foundation. See §7. No other
+`AI_DOCS` file has been touched, and no source code changed with it.
 
 Files were not written from memory. The Laravel 12 skeleton, the Laravel 12
 framework, and Laravel Sanctum 4 were fetched from their official repositories,
@@ -300,3 +303,80 @@ from a default Vite React template.
 | `npm run build` | PASS |
 | `npm audit` | 0 vulnerabilities |
 | Fresh-clone structural integrity | 20 backend + 19 frontend feature directories present |
+
+---
+
+# 7. Post-freeze documentation change
+
+One change has been made since the `foundation-v1` tag. It is
+**documentation-only**: no source code, configuration, test, or build file was
+modified, and no behavior changed.
+
+## 7.1 What changed and why
+
+**File:** `AI_DOCS/04_Project_Structure.md` — the only `AI_DOCS` file modified.
+
+**Why.** §1 of that document described a repository with separate `backend/`
+and `frontend/` roots. The Phase 42 brief superseded that with a single Laravel
+application, so the canonical structure map contradicted the frozen code. This
+was recorded at freeze as decision **D-F01** and listed as the one known
+documentation debt in `PROJECT_CONSTRAINTS.md` §3.10, deliberately left for
+explicit approval rather than amended silently.
+
+`PROJECT_CONSTRAINTS.md` §1.10 requires that structure and documentation never
+drift apart. This change discharges that obligation: the map now matches the
+territory.
+
+## 7.2 Sections updated
+
+Thirty path references across twelve sections were re-rooted from the
+two-application layout to the single-application layout.
+
+| Section | Change |
+|---|---|
+| §1 Root Directory Structure | Rewritten. Documents the single Laravel application, the real root tree, the prohibition on `frontend/`, `backend/`, `laravel_app/`, `deployment/`, and `scripts/`, and the deployment characteristics that follow (no symlink, no server-side Node.js, no Docker, no compiled base path). |
+| §2 Backend Structure | Tree re-rooted from `backend/` to the repository root. |
+| §3 Frontend Structure | Tree re-rooted from `frontend/src/` to `resources/js/`. Records that React lives inside the Laravel application, that there is no separate `index.html` because Laravel renders the shell, that build configuration sits at the application root, and adds the `locales/` boundary. |
+| §4 Database Structure | Tree re-rooted to `database/`. |
+| §5 Storage Structure | Tree re-rooted to `storage/`. `public/storage` documented as never created. |
+| §6 Public Assets Structure | Document root corrected to `public/`. Records the application-root `.htaccess` for `public_html/113` and the absence of a storage symlink. |
+| §7 Configuration Structure | Consolidated to one environment file, with server and browser values separated by the `VITE_` prefix rather than by directory. |
+| §9 Testing Structure | Test trees re-rooted to `tests/` and `resources/js/`. |
+| §10 Build & Deployment Files | Single root tree. Records that the repository is the deployable unit uploaded into `public_html/113`, and that the asset build never runs on the server. |
+| §12 Feature-Based Organization | Ownership tree re-rooted to `app/Features/`, `app/Http/`, `tests/`, `resources/js/features/`. |
+| §13 Shared Resources | Trees re-rooted to `app/` and `resources/js/`. |
+| §14 Future Expansion Strategy | Removed the `deployment/` reference; localization row updated to the confirmed Arabic/English boundaries, with timezone and currency still PENDING (Q-015). |
+| §15 Consistency Review | Two review rows updated to describe the single-application structure. |
+
+## 7.3 What was deliberately NOT changed
+
+- No requirement was changed.
+- No architecture decision was changed.
+- No business rule was changed.
+- All 15 section headings and the Document Scope are byte-identical.
+- Every rule sentence is intact, verified by keyword count against the
+  pre-change file: Teacher Workspace isolation (6), one global Student account
+  (3), Parent read-only (3), Flow A (12), Archive instead of permanent deletion
+  (2), Audit Log (12), Image and PDF Homework (1).
+- No other file under `AI_DOCS/` was touched.
+- No source code was modified.
+
+Every removed line was verified to be a path description or layout prose. The
+diff contains no removed requirement, decision, or rule.
+
+## 7.4 Synchronization confirmed
+
+`AI_DOCS` is once again fully synchronized with the codebase. Verified against
+the working tree:
+
+| Check | Result |
+|---|---|
+| Every root directory §1 lists exists | 9 / 9 |
+| Every root file §1, §7, §10 list exists | 12 / 12 (plus `artisan`, `.htaccess`) |
+| Every `resources/js` boundary §3 lists exists | 14 / 14 |
+| Forbidden directories absent | `frontend/`, `backend/`, `laravel_app/`, `deployment/`, `scripts/` — none present |
+| `public/storage` absent, as §6 states | Confirmed |
+| Remaining `backend/` or `frontend/` path references | 0 (the single mention is the prohibition itself) |
+
+**Documentation debt at freeze: cleared.** `PROJECT_CONSTRAINTS.md` §3.10 no
+longer has an outstanding item.

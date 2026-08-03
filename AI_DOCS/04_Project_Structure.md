@@ -12,40 +12,63 @@ The structure supports the confirmed Version 1 baseline: Laravel 12 / PHP 8.3, R
 
 # 1. Root Directory Structure
 
-The repository is a modular monolith with separate `backend` and `frontend` applications. This separation keeps Laravel’s server responsibilities and the React browser bundle independently maintainable while allowing them to be deployed together on cPanel Shared Hosting.
+The repository is a **single Laravel 12 application**. The React 19 browser application lives inside that application at `resources/js`, so there is no separate frontend project, no second dependency graph, and no assembly step before release.
+
+The deployment target is a single application uploaded directly into `public_html/113` on cPanel Shared Hosting. Because the repository is the deployable unit, the structure below is exactly what is uploaded.
 
 ```text
 BunaaSystem/
 ├── AI_DOCS/                         # Canonical architecture, requirements, and planning documents
-├── backend/                         # Laravel 12 application and API
-├── frontend/                        # React 19 + Vite browser application
-├── deployment/                      # Versioned deployment-supporting templates and release guidance
-├── scripts/                         # Safe repository-level maintenance and build helper scripts
+├── app/                             # Application code; app/Features/ groups work by business capability
+├── bootstrap/                       # Application bootstrap and generated framework cache
+├── config/                          # Laravel configuration; no environment secrets
+├── database/                        # Migrations, factories, seeders
+├── public/                          # The only web-exposed directory; Vite build output lands in public/build/
+├── resources/                       # js/ (React 19 application), views/ (application shell), lang/ (ar, en)
+├── routes/                          # api.php (/api/v1), web.php (shell), console.php (Scheduler)
+├── storage/                         # Runtime files, logs, framework cache; never committed
+├── tests/                           # Feature/, Unit/, Support/
+├── vendor/                          # Composer dependencies; installed, never committed
+├── artisan                          # Laravel command-line entry point
+├── composer.json                    # PHP dependencies and Laravel scripts declaration
+├── package.json                     # JavaScript dependencies and build scripts declaration
+├── .htaccess                        # Application-root protection; required when the app root is inside public_html
 ├── .editorconfig                    # Repository-wide editor conventions
 ├── .gitattributes                   # Git file-handling conventions
 ├── .gitignore                       # Excludes dependencies, secrets, generated assets, and runtime data
 ├── README.md                        # Repository entry point and non-secret local setup overview
-└── LICENSE                           # License, when selected and approved
+└── LICENSE                          # License, when selected and approved
 ```
 
 | Root area | Purpose |
 |---|---|
 | `AI_DOCS/` | The documented source set for business, architecture, data, API, frontend, backend, and future planning decisions. |
-| `backend/` | The Laravel 12 modular monolith. It is the only application that directly accesses MySQL, sessions, queues, and Laravel Public Storage. |
-| `frontend/` | The React 19 Web Application. It communicates with the backend using the documented REST API only. |
-| `deployment/` | Non-secret deployment templates, cPanel-compatible release references, and server-entrypoint mapping guidance. It does not contain live credentials. |
-| `scripts/` | Optional repository-level developer and release helper scripts. They must not duplicate Laravel commands or embed production secrets. |
+| `app/` | The Laravel 12 modular monolith. It is the only place that directly accesses MySQL, sessions, queues, and Laravel Public Storage. |
+| `resources/js/` | The React 19 Web Application. It communicates with the server using the documented REST API only. |
+| `public/` | The cPanel web document root content and the destination for the generated Vite build. |
+| `.htaccess` | Denies HTTP access to `app/`, `bootstrap/`, `config/`, `database/`, `resources/`, `routes/`, `storage/`, `tests/`, `vendor/`, and dotfiles, then forwards remaining traffic into `public/`. |
+
+The following directories must **not** exist: `frontend/`, `backend/`, `laravel_app/`, `deployment/`, and `scripts/`. A separate frontend or backend root would reintroduce an assembly step before every upload, which the single-directory deployment target does not permit.
 
 The repository must not commit dependency directories, generated frontend build output, runtime logs, caches, uploaded files, environment files containing secrets, backups, or database dumps unless a separately approved operational policy explicitly requires a sanitized artifact.
+
+Deployment characteristics that follow from this structure:
+
+- No symlink is required. `public/storage` is never linked; files are delivered through backend authorization.
+- No Node.js runtime is required on the production server. Vite assets are built locally or in CI and uploaded as part of `public/build/`.
+- No Docker, container, or orchestration definition is used.
+- No absolute host, port, or deployment path is compiled into the application. The base path comes from `APP_URL`, so the same build serves a domain root or a subdirectory such as `public_html/113`.
 
 ---
 
 # 2. Backend Structure (Laravel)
 
-The backend follows Laravel 12 conventions while grouping application responsibilities by feature and scope. Laravel framework directories remain recognizable so the project is maintainable by Laravel developers and compatible with shared hosting.
+The server side follows Laravel 12 conventions while grouping application responsibilities by feature and scope. Laravel framework directories remain recognizable so the project is maintainable by Laravel developers and compatible with shared hosting.
+
+The tree below is rooted at the repository root, because the Laravel application *is* the repository.
 
 ```text
-backend/
+BunaaSystem/
 ├── app/
 │   ├── Console/
 │   │   └── Commands/                # Scheduled and administrative Laravel commands
@@ -133,63 +156,68 @@ The names **EducationalGrades** and **Lessons** are intentional: Version 1 uses 
 
 # 3. Frontend Structure (React)
 
-The frontend uses React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form, and Zod. It is feature-based and treats the Laravel REST API as the only data and file access boundary.
+The React application uses React 19, TypeScript, Vite, Tailwind CSS, React Router, TanStack Query, React Hook Form, and Zod. It is feature-based and treats the Laravel REST API as the only data and file access boundary.
+
+It lives **inside the Laravel application** at `resources/js`. There is no separate frontend project and no separate `index.html`: Laravel renders the single application shell, because the shell must carry the CSRF token, the resolved language and text direction, and the deployed base path. Build configuration files sit at the repository root, shared with the rest of the application.
 
 ```text
-frontend/
-├── public/                          # Static public build inputs only; no user-uploaded content
-├── src/
-│   ├── app/                         # React bootstrap, providers, root boundary, app configuration
-│   ├── assets/                      # Versioned static application assets imported by the bundle
-│   ├── auth/                        # Sanctum session coordination, current user, role context helpers
-│   ├── components/
-│   │   ├── primitives/              # Accessible domain-neutral reusable controls
-│   │   └── shared/                  # Reusable composites: states, pagination, filters, selectors
-│   ├── config/                      # Typed public environment and frontend configuration
-│   ├── features/
-│   │   ├── authentication/          # Login, logout, account activation experience
-│   │   ├── platform-administration/ # Super Admin Platform-level features
-│   │   ├── teacher-workspace/       # Teacher/Teacher Staff workspace features
-│   │   ├── educational-grades/      # Educational Grade feature UI and client coordination
-│   │   ├── groups/                  # Group feature UI and client coordination
-│   │   ├── students/                # Student feature UI and per-Teacher relationship context
-│   │   ├── parents/                 # Parent monitoring and Student Switcher
-│   │   ├── attendance/              # QR scanner adapter, ID Card input, manual Attendance views
-│   │   ├── homework/                # Homework and permitted submission-file flows
-│   │   ├── lessons/                 # Private authorized Lesson views
-│   │   ├── exams/                   # Question Bank, Exam, attempt, and results views
-│   │   ├── reports/                 # Scope-aware report views
-│   │   ├── payments/                # Flow B payment-status views only
-│   │   ├── subscriptions/           # Flow A Subscription views only
-│   │   ├── users/                   # Teacher Staff and permission-assignment views
-│   │   ├── settings/                # Role-appropriate settings views
-│   │   ├── files/                   # Authorized upload, access, Archive, and restore coordination
-│   │   ├── archive/                 # Shared Archive and restore presentation coordination
-│   │   └── audit-log/               # Permitted scope-aware Audit Log views
-│   ├── layouts/                     # Public, Platform, Teacher Workspace, Student, Parent layouts
-│   ├── lib/                         # HTTP boundary, query conventions, safe technical utilities
-│   ├── routes/                      # React Router composition, guards, access metadata, lazy routes
-│   ├── styles/                      # Tailwind entrypoint and approved semantic theme token definitions
-│   ├── test/                        # Shared frontend test setup and utilities
-│   └── types/                       # Stable shared TypeScript contracts
-├── tests/
-│   ├── integration/                 # Cross-feature frontend integration tests
-│   └── e2e/                         # Browser-level role and workflow tests when adopted
-├── index.html                       # Vite HTML entry point
+resources/js/
+├── app/                             # React bootstrap, providers, root boundary, app configuration
+├── assets/                          # Versioned static application assets imported by the bundle
+├── auth/                            # Sanctum session coordination, current user, role context helpers
+├── components/
+│   ├── primitives/                  # Accessible domain-neutral reusable controls
+│   └── shared/                      # Reusable composites: states, pagination, filters, selectors
+├── config/                          # Typed public environment and frontend configuration
+├── features/
+│   ├── authentication/              # Login, logout, account activation experience
+│   ├── platform-administration/     # Super Admin Platform-level features
+│   ├── teacher-workspace/           # Teacher/Teacher Staff workspace features
+│   ├── educational-grades/          # Educational Grade feature UI and client coordination
+│   ├── groups/                      # Group feature UI and client coordination
+│   ├── students/                    # Student feature UI and per-Teacher relationship context
+│   ├── parents/                     # Parent monitoring and Student Switcher
+│   ├── attendance/                  # QR scanner adapter, ID Card input, manual Attendance views
+│   ├── homework/                    # Homework and permitted submission-file flows
+│   ├── lessons/                     # Private authorized Lesson views
+│   ├── exams/                       # Question Bank, Exam, attempt, and results views
+│   ├── reports/                     # Scope-aware report views
+│   ├── payments/                    # Flow B payment-status views only
+│   ├── subscriptions/               # Flow A Subscription views only
+│   ├── users/                       # Teacher Staff and permission-assignment views
+│   ├── settings/                    # Role-appropriate settings views
+│   ├── files/                       # Authorized upload, access, Archive, and restore coordination
+│   ├── archive/                     # Shared Archive and restore presentation coordination
+│   └── audit-log/                   # Permitted scope-aware Audit Log views
+├── layouts/                         # Public, Platform, Teacher Workspace, Student, Parent layouts
+├── lib/                             # HTTP boundary, query conventions, safe technical utilities
+├── locales/                         # Frontend locale resources (Arabic default, English)
+├── routes/                          # React Router composition, guards, access metadata, lazy routes
+├── styles/                          # Tailwind entrypoint and approved semantic theme token definitions
+├── test/                            # Shared frontend test setup and utilities
+└── types/                           # Stable shared TypeScript contracts
+
+BunaaSystem/                         # Frontend build configuration at the application root
 ├── package.json                     # JavaScript dependencies and scripts declaration
 ├── package-lock.json                # Locked JavaScript dependency versions, if npm is selected
 ├── tsconfig.json                    # TypeScript compiler configuration
 ├── vite.config.ts                   # Vite build and development-server configuration
+├── vitest.config.ts                 # Frontend test-runner configuration
+├── eslint.config.js                 # React and TypeScript lint boundary
 ├── tailwind.config.ts               # Tailwind semantic token and content configuration
-└── .env.example                     # Non-secret Vite public configuration template
+├── postcss.config.js                # PostCSS pipeline configuration
+└── .env.example                     # Shared non-secret template, including Vite public variables
 ```
+
+The Vite entry points are `resources/js/styles/app.css` and `resources/js/app/main.tsx`. Cross-feature integration and browser end-to-end tests live under `resources/js` beside the code they protect, or in the Laravel `tests/` tree where they exercise server behavior.
 
 ### Frontend folder responsibilities
 
-- `src/app/` composes providers and root-level recovery boundaries; it does not own feature workflows.
-- `src/features/` owns feature-specific route modules, components, query hooks, form definitions, Zod schemas, local types, and API adapters. Internal feature details are not imported by unrelated features.
-- `src/auth/`, `src/routes/`, and `src/layouts/` preserve authenticated role and context handling. Their controls are usability boundaries only; Laravel remains the authorization authority.
-- `src/lib/` contains shared technical boundaries, including REST response normalization and TanStack Query conventions. Direct requests from arbitrary presentation components are avoided.
+- `resources/js/app/` composes providers and root-level recovery boundaries; it does not own feature workflows.
+- `resources/js/features/` owns feature-specific route modules, components, query hooks, form definitions, Zod schemas, local types, and API adapters. Internal feature details are not imported by unrelated features.
+- `resources/js/auth/`, `resources/js/routes/`, and `resources/js/layouts/` preserve authenticated role and context handling. Their controls are usability boundaries only; Laravel remains the authorization authority.
+- `resources/js/lib/` contains shared technical boundaries, including REST response normalization and TanStack Query conventions. Direct requests from arbitrary presentation components are avoided.
+- `resources/js/locales/` holds the frontend translation resources. Adding an approved language adds a locale file and a registry entry; it does not modify existing components.
 - `src/components/` contains domain-neutral reuse only. Teacher Workspace isolation, Parent read-only rules, and feature workflows remain feature/backend responsibilities.
 - `src/styles/` contains the Tailwind entry and semantic theme definition boundary. It does not contain feature business logic or authorization decisions.
 - `public/` and `src/assets/` may hold application-owned static assets. Lesson videos, Homework files, and any uploaded file remain backend-controlled Laravel Public Storage resources and never become Vite assets.
@@ -203,7 +231,7 @@ Feature names are lower-case kebab case in the frontend. The folder `payments` r
 MySQL 8 is the system of record. The database directory contains Laravel’s version-controlled database artifacts, not a duplicate database implementation or a physical schema in this document.
 
 ```text
-backend/database/
+database/
 ├── factories/                       # Factories for deterministic backend test data
 ├── migrations/                      # Ordered Laravel schema-change history
 └── seeders/                         # Explicit seed composition for local/test environments
@@ -226,7 +254,7 @@ No database dump, generated database file, production backup, or credentials are
 Version 1 uses Laravel Public Storage for cPanel Shared Hosting compatibility. Stored files remain private by business rule through backend authorization and ownership checks, even where Laravel’s public-storage convention or server mapping is used.
 
 ```text
-backend/storage/
+storage/
 ├── app/
 │   └── public/
 │       ├── teacher-workspaces/      # Runtime Teacher Workspace-owned file namespace
@@ -237,8 +265,8 @@ backend/storage/
 ├── framework/                       # Laravel runtime framework data; not repository source
 └── logs/                            # Operational logs; not repository source
 
-backend/public/
-└── storage/                         # Public-storage link or cPanel-equivalent mapping; no direct trust boundary
+public/
+└── storage/                         # Not created: no symlink is used; files are served through backend authorization
 ```
 
 The runtime namespaces make ownership legible but do not establish access rights. Every file request must pass through backend authorization, Teacher Workspace scope, Student relationship, Parent linked-Student scope, Archive state, and resource ownership checks. Paths must not be accepted from the browser as authorization proof.
@@ -258,24 +286,23 @@ The precise final protected-file delivery mapping remains subject to the documen
 
 # 6. Public Assets Structure
 
-The cPanel web document root is Laravel’s `backend/public/`. The Vite build is deployed into the `build/` subdirectory so Apache or LiteSpeed can serve browser assets while Laravel continues to receive application and API requests.
+The web document root is Laravel’s `public/`. When the application is uploaded into `public_html/113`, the application root sits inside the document root, so an application-root `.htaccess` denies access to every non-public directory and forwards remaining traffic into `public/`. The Vite build is written into the `build/` subdirectory so Apache or LiteSpeed can serve browser assets while Laravel continues to receive application and API requests.
 
 ```text
-backend/public/
+public/
 ├── build/                           # Generated Vite production assets; deploy artifact, not Git source
 │   └── assets/                      # Fingerprinted JavaScript, CSS, and static bundle assets
-├── storage/                         # Laravel public-storage mapping; application access rules still apply
-├── .htaccess                        # Apache routing configuration where the hosting server uses Apache
+├── .htaccess                        # Apache/LiteSpeed routing configuration for the document root
+├── robots.txt                       # Indexing policy for a private platform
 └── index.php                        # Laravel front controller
 
-frontend/public/
-└── ...                              # Versioned static assets copied into the Vite build when appropriate
-
-frontend/src/assets/
+resources/js/assets/
 └── ...                              # Versioned assets processed by Vite and emitted into build/assets
 ```
 
-`backend/public/build/` is generated by the frontend production build and is not edited manually. It is a release artifact and is excluded from normal source commits. `frontend/public/` and `frontend/src/assets/` must contain only application-owned static resources; they must not contain user uploads, private Lessons, QR attendance secrets, or configuration secrets.
+`public/build/` is generated by the production build and is not edited manually. It is a release artifact and is excluded from normal source commits. `resources/js/assets/` must contain only application-owned static resources; it must not contain user uploads, private Lessons, QR attendance secrets, or configuration secrets.
+
+`public/` contains no `storage/` mapping. No symlink is created, because a public link would expose stored files by URL and bypass the authorization every file request must pass (§5).
 
 Apache-specific `.htaccess` files are used only when the cPanel server is Apache. LiteSpeed-compatible routing follows the host’s equivalent configuration behavior. This document does not prescribe server configuration contents.
 
@@ -283,32 +310,33 @@ Apache-specific `.htaccess` files are used only when the cPanel server is Apache
 
 # 7. Configuration Structure
 
-Configuration is separated by application ownership and environment sensitivity. Committed configuration defines safe defaults and variable names; environment-specific values and secrets exist only in deployment-managed environment files.
+Configuration is separated by responsibility and environment sensitivity. Committed configuration defines safe defaults and variable names; environment-specific values and secrets exist only in deployment-managed environment files.
+
+Because the project is a single application, there is one environment file. Server values and browser-safe `VITE_` values live in the same file and are separated by the variable prefix, not by directory.
 
 ```text
 BunaaSystem/
-├── backend/
-│   ├── config/                      # Laravel framework and application configuration
-│   ├── bootstrap/cache/              # Generated Laravel config/route cache; not committed
-│   └── .env.example                 # Non-secret Laravel variable template
-├── frontend/
-│   ├── .env.example                 # Non-secret Vite public-variable template
-│   ├── vite.config.ts               # Vite configuration boundary
-│   ├── tailwind.config.ts           # Tailwind configuration boundary
-│   └── tsconfig.json                # TypeScript configuration boundary
-├── deployment/
-│   ├── cpanel/                      # Non-secret cPanel mapping and Cron reference templates
-│   ├── apache/                      # Non-secret Apache deployment references where applicable
-│   └── litespeed/                   # Non-secret LiteSpeed deployment references where applicable
+├── config/                          # Laravel framework and application configuration
+├── bootstrap/cache/                 # Generated Laravel config/route cache; not committed
+├── .env.example                     # Single non-secret template: Laravel and VITE_ public variables
+├── vite.config.ts                   # Vite configuration boundary
+├── vitest.config.ts                 # Frontend test-runner boundary
+├── eslint.config.js                 # React and TypeScript lint boundary
+├── tailwind.config.ts               # Tailwind configuration boundary
+├── postcss.config.js                # PostCSS pipeline boundary
+├── tsconfig.json                    # TypeScript configuration boundary
+├── phpunit.xml                      # Backend test-runner boundary
+├── pint.json                        # PHP code-style boundary
+├── .htaccess                        # Application-root protection for public_html deployment
 └── .gitignore                       # Repository secret/runtime/generated-artifact exclusions
 ```
 
 | Configuration boundary | Purpose |
 |---|---|
 | Laravel `config/` | Framework-level configuration for MySQL, Sanctum, sessions, queues, cache, storage, logging, mail transport baseline, and application behavior. Configuration values do not create out-of-scope notification or payment features. |
-| Laravel environment file | Deployment-managed values such as database credentials, application key, mail transport credentials, and other secrets. It is never committed. |
-| Vite environment file | Browser-safe public values only, such as a public API base URL. It must never contain tokens, application keys, database values, storage credentials, or authorization decisions. |
-| `deployment/` | Versioned non-secret references that make cPanel deployment mapping repeatable without embedding operational credentials or live host details. |
+| Environment file | Deployment-managed values such as database credentials, application key, mail transport credentials, and other secrets. It is never committed. |
+| `VITE_` variables | Browser-safe public values only, such as a public API base URL. They must never contain tokens, application keys, database values, storage credentials, or authorization decisions. Only the `VITE_` prefix is exposed to the browser bundle. |
+| Application-root `.htaccess` | Non-secret hosting protection that makes the single-directory cPanel deployment repeatable without embedding operational credentials or live host details. |
 
 The final Sanctum session or token transport mechanics are deployment decisions. This directory structure supports the approved model without hardening unconfirmed cookie, token, domain, or cross-origin details.
 
@@ -371,24 +399,22 @@ Documentation changes must preserve the priority of `00_Project_Context.md`. A d
 
 # 9. Testing Structure
 
-Testing is separated by application boundary while keeping feature-level tests close to the code they protect. Test data must represent valid scope contexts without using production records or secrets.
+Testing is separated by runtime boundary while keeping feature-level tests close to the code they protect. Test data must represent valid scope contexts without using production records or secrets.
 
 ```text
 BunaaSystem/
-├── backend/
-│   ├── tests/
-│   │   ├── Feature/                 # API, policy, workflow, persistence, Archive integration tests
-│   │   ├── Unit/                    # Isolated Laravel domain/service tests
-│   │   └── Support/                 # Test helpers, fixtures, builders, authentication helpers
-│   └── database/
-│       ├── factories/               # Test-data factories
-│       └── seeders/                 # Explicit test/local seed composition
-└── frontend/
-    ├── src/
-    │   └── test/                    # Shared frontend test setup and test utilities
-    └── tests/
-        ├── integration/             # Feature composition, routing, forms, and query-state tests
-        └── e2e/                     # Browser workflow tests when the approved test tooling is added
+├── tests/                           # Server-side test suites
+│   ├── Feature/                     # API, policy, workflow, persistence, Archive integration tests
+│   ├── Unit/                        # Isolated Laravel domain/service tests
+│   └── Support/                     # Test helpers, fixtures, builders, authentication helpers
+├── database/
+│   ├── factories/                   # Test-data factories
+│   └── seeders/                     # Explicit test/local seed composition
+└── resources/js/
+    ├── test/                        # Shared frontend test setup and test utilities
+    └── features/{feature}/          # Feature composition, routing, forms, and query-state tests
+                                     # beside the code they protect; browser workflow tests are
+                                     # added here when the approved e2e tooling is chosen
 ```
 
 | Test area | Required architectural coverage |
@@ -410,30 +436,28 @@ Build and deployment files are kept at the relevant application boundary. Their 
 
 ```text
 BunaaSystem/
-├── backend/
-│   ├── artisan                       # Laravel command entry point
-│   ├── composer.json                 # PHP dependency/build script declaration
-│   ├── composer.lock                 # Locked PHP dependency graph
-│   ├── phpunit.xml                   # Backend test-runner configuration
-│   ├── .env.example                 # Non-secret environment template
-│   └── public/                       # cPanel web document-root content
-├── frontend/
-│   ├── package.json                  # Frontend dependency/build script declaration
-│   ├── package-lock.json             # Locked package graph, if npm is selected
-│   ├── vite.config.ts                # Vite build configuration boundary
-│   ├── tsconfig.json                 # TypeScript configuration boundary
-│   ├── tailwind.config.ts            # Tailwind configuration boundary
-│   ├── index.html                    # Vite application entry point
-│   └── .env.example                 # Non-secret public-variable template
-├── deployment/
-│   ├── cpanel/                       # cPanel release, document-root, and Cron reference templates
-│   ├── apache/                       # Apache-compatible deployment references
-│   └── litespeed/                    # LiteSpeed-compatible deployment references
-├── scripts/                          # Optional non-secret repository automation helpers
-└── .gitignore                        # Generated artifacts, dependencies, runtime files, and secrets excluded
+├── artisan                          # Laravel command entry point
+├── composer.json                    # PHP dependency/build script declaration
+├── composer.lock                    # Locked PHP dependency graph
+├── phpunit.xml                      # Backend test-runner configuration
+├── pint.json                        # PHP code-style configuration
+├── package.json                     # Frontend dependency/build script declaration
+├── package-lock.json                # Locked package graph, if npm is selected
+├── vite.config.ts                   # Vite build configuration boundary
+├── vitest.config.ts                 # Frontend test-runner configuration
+├── eslint.config.js                 # React and TypeScript lint configuration
+├── tsconfig.json                    # TypeScript configuration boundary
+├── tailwind.config.ts               # Tailwind configuration boundary
+├── postcss.config.js                # PostCSS pipeline configuration
+├── .env.example                     # Single non-secret environment template
+├── .htaccess                        # Application-root protection for public_html deployment
+├── public/                          # cPanel web document-root content
+└── .gitignore                       # Generated artifacts, dependencies, runtime files, and secrets excluded
 ```
 
-The deployment package provides the compiled Vite assets to `backend/public/build/` and configures the host document root to Laravel’s `backend/public/` where hosting supports that mapping. Laravel Scheduler is triggered by cPanel Cron Jobs; queued work uses the Database Queue; sessions use the database driver; cache uses the File Cache. These are deployment constraints, not an implementation of a release pipeline.
+There is no deployment package and no release script. The repository is the deployable unit: it is uploaded directly into `public_html/113`, and the application-root `.htaccess` forwards HTTP traffic into `public/` while denying every non-public directory. Where the host allows it, the cPanel document root may instead be pointed at `public/`; both mappings work without modifying the application.
+
+The production build writes compiled Vite assets to `public/build/`. That build runs locally or in CI, never on the server, so no Node.js runtime is required in production. Laravel Scheduler is triggered by a single cPanel Cron Job; queued work uses the Database Queue; sessions use the database driver; cache uses the File Cache. These are deployment constraints, not an implementation of a release pipeline.
 
 Live `.env` files, `vendor/`, `node_modules/`, frontend build output, Laravel caches, logs, storage runtime files, and credentials are not source-controlled. The detailed deployment sequence, environment inventory, and backup/rollback policy belong to `26_Deployment_Plan.md`.
 
@@ -463,17 +487,17 @@ Canonical terminology is mandatory: **Teacher Workspace**, **Educational Grade**
 
 # 12. Feature-Based Organization
 
-The same logical features exist across backend, frontend, tests, and documentation, but each application owns only its appropriate layer. This makes a workflow discoverable without duplicating business enforcement.
+The same logical features exist across the server side, the browser side, tests, and documentation, but each layer owns only its appropriate responsibility. This makes a workflow discoverable without duplicating business enforcement.
 
 ```text
 Feature ownership across the repository
 
 AI_DOCS/                         # Requirements and architecture source for every feature
-backend/app/Features/            # Authoritative server workflows and enforcement
-backend/app/Http/                # HTTP adaptation for feature endpoints
-backend/tests/                   # Backend behavior and boundary verification
-frontend/src/features/           # Browser presentation and client coordination
-frontend/tests/                  # Browser and client-state verification
+app/Features/                    # Authoritative server workflows and enforcement
+app/Http/                        # HTTP adaptation for feature endpoints
+tests/                           # Server behavior and boundary verification
+resources/js/features/           # Browser presentation and client coordination
+resources/js/test/               # Shared browser and client-state test utilities
 ```
 
 | Feature | Backend ownership | Frontend ownership |
@@ -496,14 +520,14 @@ Feature boundaries must not create microservices, a second database, a second au
 Shared resources are intentionally small, explicit, and free of feature-specific policy decisions.
 
 ```text
-backend/app/
+app/
 ├── Support/                        # Shared backend value objects, safe helpers, conventions
 ├── Services/                       # Shared cross-feature workflow services
 ├── Repositories/                   # Shared complex query abstractions where justified
 ├── Policies/                       # Shared authorization policy location
 └── Providers/                      # Laravel provider registration
 
-frontend/src/
+resources/js/
 ├── components/
 │   ├── primitives/                 # Domain-neutral accessible controls
 │   └── shared/                     # Reusable states, pagination, filters, context selectors
@@ -530,10 +554,10 @@ The Version 1 structure is intentionally extensible without prebuilding future s
 
 | Future area | Structure approach after formal approval |
 |---|---|
-| VPS / Cloud | Add environment-specific deployment references under `deployment/` while retaining `backend/` and `frontend/` ownership boundaries. |
+| VPS / Cloud | Add environment-specific deployment references in approved documentation while retaining the single-application structure and its server/browser ownership boundaries. |
 | Advanced caching/queues | Extend Laravel configuration and operational documentation only after infrastructure approval; Version 1 does not require Redis. |
 | Private object storage | Add a storage-adapter boundary behind the Files feature while preserving file-reference history, ownership, and Teacher Workspace isolation. |
-| Localization | Add approved translation resources in `backend/resources/lang/` and frontend locale resources under a dedicated frontend localization boundary after language, timezone, currency, and market decisions are confirmed. |
+| Localization | Arabic and English are confirmed. Add approved translation resources in `resources/lang/` for the server side and `resources/js/locales/` for the browser side; timezone, currency, and market decisions remain PENDING (Q-015). |
 | Native applications | Introduce a separately approved client application at a future root boundary; do not alter the Version 1 Web Application assumption. |
 | Notifications | Add a distinct feature only after separate approval. Version 1 retains no notification routes, jobs, data entity, or client module. |
 | Payment gateways | Add a separately approved payment integration boundary only after formal scope approval; preserve Flow A / Flow B separation. |
@@ -550,10 +574,10 @@ A consistency review was performed before saving this document.
 | Review area | Result |
 |---|---|
 | Official source alignment | Passed — `00_Project_Context.md` is treated as the final Version 1 authority. |
-| Requested scope | Passed — complete repository, backend, frontend, database, storage, assets, configuration, documentation, testing, build/deployment, naming, feature, shared-resource, and future-expansion structure is defined. |
+| Requested scope | Passed — complete repository, server, browser, database, storage, assets, configuration, documentation, testing, build/deployment, naming, feature, shared-resource, and future-expansion structure is defined. |
 | No implementation content | Passed — no source code, API implementation, UI implementation, CSS implementation, migrations, physical database tables, or deployment procedure is generated. |
 | Target stack | Passed — Laravel 12, PHP 8.3, React 19, TypeScript, Vite, Tailwind CSS, MySQL 8, Sanctum, and Custom RBAC boundaries are reflected. |
-| cPanel compatibility | Passed — Laravel public document root, generated Vite build placement, File Cache, Database Queue, Database sessions, Laravel Public Storage, Cron Jobs, and Apache/LiteSpeed compatibility are preserved. |
+| cPanel compatibility | Passed — single-application upload into `public_html/113`, application-root protection, Laravel public document root, generated Vite build placement, File Cache, Database Queue, Database sessions, Laravel Public Storage, Cron Jobs, and Apache/LiteSpeed compatibility are preserved. No symlink, Docker, or server-side Node.js build is required. |
 | Teacher Workspace isolation | Passed — feature, storage, test, cache-facing frontend, and backend ownership boundaries maintain Teacher Workspace scope. |
 | Student and Parent rules | Passed — one global Student account, per-Teacher partitioning, Parent linked-Student scope, exactly one Parent account per Student, and Parent read-only access are preserved. |
 | RBAC constraints | Passed — frontend is non-authoritative; Teacher Staff permissions and Super Admin private-content visibility remain PENDING where required. |
