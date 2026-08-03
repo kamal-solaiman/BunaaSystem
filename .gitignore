@@ -1,0 +1,52 @@
+# Dependencies (installed, never committed)
+/vendor
+/node_modules
+
+# Generated frontend build output
+/public/build
+/public/hot
+
+# Laravel public-storage mapping (created on the server)
+/public/storage
+
+# Runtime storage: uploaded files, logs, framework cache, sessions
+/storage/*.key
+/storage/pail
+/storage/app/public/*
+!/storage/app/public/.gitignore
+
+# Environment files and secrets — never committed
+.env
+.env.*
+!.env.example
+auth.json
+
+# Local database artifacts and dumps
+*.sqlite
+*.sqlite-journal
+*.sql
+*.sql.gz
+*.dump
+
+# Tooling caches and reports
+/.phpunit.cache
+/.phpunit.result.cache
+/coverage
+.php-cs-fixer.cache
+/resources/js/**/*.tsbuildinfo
+*.tsbuildinfo
+
+# Editor and OS noise
+/.idea
+/.vscode
+/.fleet
+/.zed
+/.nova
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Logs
+npm-debug.log*
+yarn-error.log*

@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Semantic theme tokens.
+ *
+ * Components reference role-based tokens (surface, content, primary) instead of
+ * literal colors, so the palette is defined once here
+ * (AI_DOCS/13_UI_UX_Guidelines.md; 04_Project_Structure.md §3).
+ */
+@layer base {
+    :root {
+        --color-surface: 255 255 255;
+        --color-surface-raised: 255 255 255;
+        --color-surface-sunken: 246 247 249;
+        --color-content: 24 28 35;
+        --color-content-muted: 96 104 118;
+        --color-border: 224 228 234;
+        --color-primary: 21 94 117;
+        --color-primary-content: 255 255 255;
+        --color-success: 21 128 61;
+        --color-warning: 180 83 9;
+        --color-danger: 185 28 28;
+        --color-info: 29 78 216;
+    }
+
+    html {
+        -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+        @apply bg-surface text-content;
+    }
+
+    /* Visible focus indicators are an accessibility requirement, not a style
+       preference (28_Coding_Standards.md §5.9). */
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-primary;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
