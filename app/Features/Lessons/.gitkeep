@@ -1,0 +1,12 @@
+Feature: Lessons
+
+Owns this feature's server-side application coordination: services, feature
+requests, queries, and feature-facing classes (AI_DOCS/04_Project_Structure.md
+§2; 11_Backend_Architecture.md §3).
+
+A feature must not become a separate service or an independently deployed
+application. Final enforcement of authorization, Teacher Workspace isolation,
+Archive behavior, and Audit Log recording stays server-side.
+
+This placeholder keeps the directory in version control while the feature is
+empty. Remove it once the feature has its first class.

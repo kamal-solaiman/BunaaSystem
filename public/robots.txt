@@ -1,0 +1,5 @@
+# Bunaa System is a private education platform. No surface is intended for
+# search indexing: every page beyond the shell requires authentication and is
+# scoped to a Teacher Workspace, a Student account, or a linked Parent.
+User-agent: *
+Disallow: /

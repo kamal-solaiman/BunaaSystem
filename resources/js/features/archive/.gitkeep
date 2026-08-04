@@ -1,0 +1,13 @@
+Feature: archive
+
+Owns this feature's browser presentation and client coordination: route
+modules, feature components, TanStack Query hooks, React Hook Form definitions,
+Zod schemas, typed API adapters, and feature-local types
+(AI_DOCS/04_Project_Structure.md §3; 12_Frontend_Architecture.md §3).
+
+A feature must not import another feature's internal implementation. Route
+guards here are usability measures only; Laravel remains the authorization
+authority.
+
+This placeholder keeps the directory in version control while the feature is
+empty. Remove it once the feature has its first module.

@@ -1,0 +1,5 @@
+Reserved boundary: resources/js/auth
+
+Defined by AI_DOCS/04_Project_Structure.md §3 and 12_Frontend_Architecture.md §2.
+Kept in version control while empty so the documented structure survives a fresh
+clone. Remove this placeholder once the directory has its first module.

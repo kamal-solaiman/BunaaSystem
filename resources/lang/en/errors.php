@@ -1,0 +1,53 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+|--------------------------------------------------------------------------
+| Error Messages — English
+|--------------------------------------------------------------------------
+|
+| The registry user messages from AI_DOCS/34_Error_Codes.md. Keys are the
+| stable machine-readable error codes; only the message is translated
+| (41_Internationalization_i18n.md §10, §22).
+|
+| A message must never reveal whether a record exists, whether an account
+| exists, or any implementation detail (34_Error_Codes.md §2.8).
+|
+*/
+
+return [
+
+    // Authentication
+    'AUTH_UNAUTHENTICATED' => 'Authentication is required.',
+    'AUTH_INVALID_CREDENTIALS' => 'The provided credentials are incorrect.',
+    'AUTH_SESSION_EXPIRED' => 'Your session has expired. Please log in again.',
+    'AUTH_LOGIN_RATE_LIMITED' => 'Too many login attempts. Please try again later.',
+
+    // Authorization
+    'AUTHZ_UNAUTHORIZED' => 'You do not have permission to perform this action.',
+    'AUTHZ_CROSS_WORKSPACE_ACCESS' => 'You do not have permission to perform this action.',
+    'AUTHZ_WORKSPACE_CONTEXT_MISMATCH' => 'The selected items cannot be used together.',
+    'AUTHZ_STAFF_PERMISSION_MISSING' => 'You do not have permission to perform this action.',
+    'AUTHZ_FLOW_A_MANAGEMENT_DENIED' => 'You do not have permission to perform this action.',
+    'AUTHZ_VISIBILITY_EXPANSION_DENIED' => 'This content is not available.',
+    'PARENT_WRITE_DENIED' => 'You do not have permission to perform this action.',
+
+    // Validation
+    'VALIDATION_FAILED' => 'The submitted data is invalid.',
+
+    // API contract / transport
+    'API_MALFORMED_REQUEST' => 'The request could not be understood.',
+    'API_UNSUPPORTED_ROUTE' => 'Not found.',
+    'API_RATE_LIMIT_EXCEEDED' => 'Too many requests. Please try again later.',
+    'RESOURCE_NOT_FOUND' => 'Not found.',
+
+    // Student module
+    'STUDENT_DUPLICATE_ACCOUNT' => 'An account with this identity already exists.',
+    'STUDENT_ACTIVATION_MISMATCH' => 'The activation details do not match any account awaiting activation.',
+    'STUDENT_ACCOUNT_ALREADY_ACTIVE' => 'This account is already active. You can log in.',
+
+    // System
+    'SYSTEM_UNEXPECTED' => 'An unexpected error occurred.',
+
+];
